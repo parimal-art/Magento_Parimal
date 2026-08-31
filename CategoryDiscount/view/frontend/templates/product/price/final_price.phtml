@@ -1,0 +1,59 @@
+<?php
+/** @var \Magento\Catalog\Pricing\Render\FinalPriceBox $block */
+
+$product = $block->getSaleableItem();
+if (!$product) {
+    return;
+}
+
+$regularPriceModel = $block->getPriceType('regular_price');
+$finalPriceModel = $block->getPriceType('final_price');
+
+if (!$regularPriceModel || !$finalPriceModel) {
+    return;
+}
+
+$regularAmount = $regularPriceModel->getAmount();
+$finalAmount = $finalPriceModel->getAmount();
+
+if ($finalAmount->getValue() < $regularAmount->getValue()):
+    ?>
+    <div class="category-discount-price">
+        <span class="special-price">
+            <?= $block->renderAmount(
+                $finalAmount,
+                [
+                    'display_label' => '',
+                    'price_id' => $block->getPriceId('product-price-' . $product->getId()),
+                    'include_container' => true
+                ]
+            ) ?>
+        </span>
+
+        <span class="discount-label">
+            <?= $block->escapeHtml(\Codilar\CategoryDiscount\Helper\Data::DISCOUNT_PERCENTAGE) ?>% OFF
+        </span>
+
+        <span class="old-price">
+            <?= $block->renderAmount(
+                $regularAmount,
+                [
+                    'display_label' => '',
+                    'price_id' => $block->getPriceId('old-price-' . $product->getId()),
+                    'include_container' => true
+                ]
+            ) ?>
+        </span>
+    </div>
+<?php else: ?>
+    <div class="price">
+        <?= $block->renderAmount(
+            $finalAmount,
+            [
+                'display_label' => '',
+                'price_id' => $block->getPriceId('product-price-' . $product->getId()),
+                'include_container' => true
+            ]
+        ) ?>
+    </div>
+<?php endif; ?>

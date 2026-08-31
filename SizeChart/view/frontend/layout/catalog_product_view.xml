@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+
+    <head>
+        <css src="Codilar_SizeChart::css/size-chart.css"/>
+        <script src="Codilar_SizeChart::js/size-chart.js"/>
+    </head>
+
+    <body>
+        <referenceContainer name="product.info.main">
+            <block class="Magento\Catalog\Block\Product\View"
+                   name="custom.static.size.chart"
+                   template="Codilar_SizeChart::size_chart.phtml"
+                   after="product.info.price"/>
+        </referenceContainer>
+
+    </body>
+</page>

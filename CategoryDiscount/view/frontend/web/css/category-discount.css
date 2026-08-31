@@ -1,0 +1,25 @@
+.category-discount-price {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 5px;
+}
+
+.category-discount-price .special-price {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.category-discount-price .old-price {
+    font-size: 14px;
+    color: #777;
+    text-decoration: line-through;
+}
+
+.category-discount-price .discount-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #e53935;
+    white-space: nowrap;
+}

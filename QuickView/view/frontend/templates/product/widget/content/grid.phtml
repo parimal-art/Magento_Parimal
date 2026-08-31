@@ -1,0 +1,40 @@
+<?php
+/**
+ * @var Magento\Framework\View\Element\Template $block
+ */
+$_product = $block->getProduct();
+if (!$_product) {
+    return;
+}
+$productId = (int) $_product->getId();
+?>
+<button type="button"
+        class="action primary quick-view-btn"
+        data-product-id="<?= $productId ?>"
+        data-mage-init='{"Codilar_QuickView/js/quickview": {"modalId": "quick-view-modal-<?= $productId ?>"}}'>
+    <span>Quick View</span>
+</button>
+<div id="quick-view-modal-<?= $productId ?>" style="display:none;">
+    <div class="product-info-content quick-view-modal-content">
+        <div class="qv-image-container">
+            <img class="qv-image" src="" alt="Product Image"/>
+        </div>
+        <div class="qv-details-container">
+            <h2 class="qv-name"></h2>
+            <p><strong>SKU:</strong> <span class="qv-sku"></span></p>
+            <p class="price-text"><strong>Price:</strong> $<span class="qv-price"></span></p>
+            <p><strong>Status:</strong> <span class="qv-stock"></span></p>
+            <div class="qv-section">
+                <strong>Short Description:</strong>
+                <div class="qv-short-description qv-content"></div>
+            </div>
+            <div class="qv-section-details">
+                <strong>Product Details:</strong>
+                <div class="qv-description qv-content"></div>
+            </div>
+            <div class="qv-action">
+                <a class="qv-product-url" href="#" class="action primary">View Full Product Page</a>
+            </div>
+        </div>
+    </div>
+</div>

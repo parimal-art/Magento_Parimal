@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<widgets xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Widget:etc/widget.xsd">
+    <widget id="codilar_related_product" class="Codilar\SliderProduct\Block\RelatedProduct">
+        <label>Related Products Slider</label>
+        <description>Show products from the same category as a slider</description>
+        <parameters>
+            <parameter name="template" xsi:type="select" required="true" visible="true">
+                <label>Template</label>
+                <options>
+                    <option name="default" value="Codilar_SliderProduct::related-product.phtml" selected="true">
+                        <label>Swiper Slider Template</label>
+                    </option>
+                </options>
+            </parameter>
+        </parameters>
+    </widget>
+</widgets>
+

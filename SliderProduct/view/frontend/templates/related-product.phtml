@@ -1,0 +1,75 @@
+<?php
+/** @var \Codilar\SliderProduct\Block\RelatedProduct $block */
+/** @var \Magento\Framework\Escaper $escaper */
+$products = $block->getCategoryProducts();
+
+// Best Practice Note: Consider injecting \Magento\Catalog\Helper\Image into your Block class's constructor instead of using ObjectManager in the template.
+$imageHelper = \Magento\Framework\App\ObjectManager::getInstance()->get(\Magento\Catalog\Helper\Image::class);
+?>
+
+<?php if ($products && $products->getSize()): ?>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+
+    <style>
+        .relatedSwiper {
+            margin-top: 50px;
+            padding: 0 40px;
+        }
+        .swiper-slide {
+            text-align: center;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background: #fff;
+        }
+    </style>
+
+    <div class="custom-related-products">
+        <h3>Related Products</h3>
+
+        <div class="swiper relatedSwiper">
+            <div class="swiper-wrapper">
+                <?php foreach ($products as $product): ?>
+                    <?php
+                    $imageUrl = $imageHelper->init($product, 'product_small_image')->getUrl();
+                    $productUrl = $block->getUrl('catalog/product/view', ['id' => $product->getId()]);
+                    $price = number_format((float)$product->getPrice(), 2);
+                    ?>
+                    <div class="swiper-slide">
+                        <a href="<?= $escaper->escapeUrl($productUrl) ?>">
+                            <img src="<?= $escaper->escapeUrl($imageUrl) ?>" alt="<?= $escaper->escapeHtml($product->getName()) ?>" style="max-width: 100%;" />
+                        </a>
+                        <h4>
+                            <a href="<?= $escaper->escapeUrl($productUrl) ?>">
+                                <?= $escaper->escapeHtml($product->getName()) ?>
+                            </a>
+                        </h4>
+                        <div class="price">$<?= $escaper->escapeHtml($price) ?></div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            <div class="swiper-button-next"></div>
+            <div class="swiper-button-prev"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            new Swiper('.relatedSwiper', {
+                slidesPerView: 3,
+                spaceBetween: 20,
+                loop: true,
+                navigation: {
+                    nextEl: '.swiper-button-next',
+                    prevEl: '.swiper-button-prev'
+                },
+                breakpoints: {
+                    320: { slidesPerView: 1 },
+                    768: { slidesPerView: 2 },
+                    1024: { slidesPerView: 3 }
+                }
+            });
+        });
+    </script>
+<?php endif; ?>
