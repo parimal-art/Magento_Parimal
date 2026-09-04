@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <!-- Interfaces Mapping -->
+    <preference for="Codilar\ProductChk\Api\Data\EnquiryInterface" type="Codilar\ProductChk\Model\Enquiry"/>
+    <preference for="Codilar\ProductChk\Api\EnquiryRepositoryInterface" type="Codilar\ProductChk\Model\EnquiryRepository"/>
+
+    <!-- Custom Logger Configuration -->
+    <type name="Codilar\ProductChk\Logger\Handler">
+        <arguments>
+            <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+        </arguments>
+    </type>
+    <type name="Codilar\ProductChk\Logger\Logger">
+        <arguments>
+            <argument name="name" xsi:type="string">product_enquiry_logger</argument>
+            <argument name="handlers"  xsi:type="array">
+                <item name="system" xsi:type="object">Codilar\ProductChk\Logger\Handler</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <!-- Inject Custom Logger into Repository -->
+    <type name="Codilar\ProductChk\Model\EnquiryRepository">
+        <arguments>
+            <argument name="logger" xsi:type="object">Codilar\ProductChk\Logger\Logger</argument>
+        </arguments>
+    </type>
+</config>

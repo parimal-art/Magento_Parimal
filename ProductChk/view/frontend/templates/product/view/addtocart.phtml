@@ -1,0 +1,112 @@
+<?php
+/** @var $block \Magento\Catalog\Block\Product\View */
+/** @var $escaper \Magento\Framework\Escaper */
+
+$_product = $block->getProduct();
+?>
+<div class="box-tocart">
+    <div class="fieldset">
+        <div class="actions">
+            <button type="button"
+                    title="<?= $escaper->escapeHtmlAttr(__('Product Enquiry')) ?>"
+                    class="action primary tocart"
+                    id="product-enquiry-btn"
+                    data-mage-init='{
+                        "Codilar_ProductChk/js/enquiry": {
+                            "modalSelector": "#enquiry-modal",
+                            "formSelector": "#enquiry-form",
+                            "sku": "<?= $escaper->escapeJs($_product->getSku()) ?>",
+                            "title": "<?= $escaper->escapeJs(__('Product Enquiry')) ?>"
+                        }
+                    }'>
+                <span><?= $escaper->escapeHtml(__('Product Enquiry')) ?></span>
+            </button>
+        </div>
+    </div>
+</div>
+<div id="enquiry-modal">
+    <form id="enquiry-form" class="form">
+        <input type="hidden"
+               name="form_key"
+               value="<?= $escaper->escapeHtmlAttr($block->getFormKey()) ?>">
+        <fieldset class="fieldset">
+            <!-- Name -->
+            <div class="field name required">
+                <label class="label" for="enquiry-name">
+                    <span><?= $escaper->escapeHtml(__('Name')) ?></span>
+                </label>
+                <div class="control">
+                    <input type="text"
+                           name="name"
+                           id="enquiry-name"
+                           class="input-text"
+                           required
+                           data-validate="{required:true}">
+                </div>
+            </div>
+            <!-- Email -->
+            <div class="field email required">
+                <label class="label" for="enquiry-email">
+                    <span><?= $escaper->escapeHtml(__('Email')) ?></span>
+                </label>
+                <div class="control">
+                    <input type="email"
+                           name="email"
+                           id="enquiry-email"
+                           class="input-text"
+                           required
+                           data-validate="{required:true, 'validate-email':true}">
+                </div>
+            </div>
+            <!-- Address -->
+            <div class="field address required">
+                <label class="label" for="enquiry-address">
+                    <span><?= $escaper->escapeHtml(__('Address')) ?></span>
+                </label>
+                <div class="control">
+                    <textarea name="address"
+                              id="enquiry-address"
+                              class="input-text"
+                              required
+                              data-validate="{required:true}"></textarea>
+                </div>
+            </div>
+            <!-- SKU -->
+            <div class="field sku required">
+                <label class="label" for="enquiry-sku">
+                    <span><?= $escaper->escapeHtml(__('SKU')) ?></span>
+                </label>
+                <div class="control">
+                    <input type="text"
+                           name="sku"
+                           id="enquiry-sku"
+                           value="<?= $escaper->escapeHtmlAttr($_product->getSku()) ?>"
+                           class="input-text"
+                           readonly>
+                </div>
+            </div>
+            <!-- Qty -->
+            <div class="field qty required">
+                <label class="label" for="enquiry-qty">
+                    <span><?= $escaper->escapeHtml(__('Qty')) ?></span>
+                </label>
+                <div class="control enquiry-qty-control">
+                    <button type="button"
+                            class="action"
+                            data-role="qty-down">-</button>
+                    <input type="number"
+                           name="qty"
+                           id="enquiry-qty"
+                           min="1"
+                           value="1"
+                           class="input-text qty"
+                           required
+                           data-validate="{required:true}">
+                    <button type="button"
+                            class="action"
+                            data-role="qty-up">+</button>
+                </div>
+            </div>
+        </fieldset>
+    </form>
+</div>
