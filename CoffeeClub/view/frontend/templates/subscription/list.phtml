@@ -1,0 +1,106 @@
+<?php
+/**
+ * @var \Codilar\CoffeeClub\Block\Customer\SubscriptionList $block
+ */
+?>
+<?php $subscriptions = $block->getSubscriptions(); ?>
+
+<?php if (empty($subscriptions)): ?>
+    <div class="message info empty">
+        <span><?= $block->escapeHtml(__('You have no active Coffee Club subscriptions.')) ?></span>
+    </div>
+    <div class="actions-toolbar">
+        <a href="<?= $block->escapeUrl($block->getUrl('catalog/category/view', ['id' => 3])) ?>"
+           class="action primary">
+            <span><?= $block->escapeHtml(__('Browse Coffee Products')) ?></span>
+        </a>
+    </div>
+<?php else: ?>
+    <div class="table-wrapper subscriptions">
+        <table class="data table table-subscriptions" id="my-subscriptions-table">
+            <caption class="table-caption"><?= $block->escapeHtml(__('Coffee Club Subscriptions')) ?></caption>
+            <thead>
+            <tr>
+                <th scope="col" class="col id"><?= $block->escapeHtml(__('ID')) ?></th>
+                <th scope="col" class="col product"><?= $block->escapeHtml(__('Product')) ?></th>
+                <th scope="col" class="col quantity"><?= $block->escapeHtml(__('Qty')) ?></th>
+                <th scope="col" class="col frequency"><?= $block->escapeHtml(__('Frequency')) ?></th>
+                <th scope="col" class="col next-date"><?= $block->escapeHtml(__('Next Delivery')) ?></th>
+                <th scope="col" class="col status"><?= $block->escapeHtml(__('Status')) ?></th>
+                <th scope="col" class="col actions"><?= $block->escapeHtml(__('Actions')) ?></th>
+            </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($subscriptions as $subscription): ?>
+                <tr>
+                    <td data-th="<?= $block->escapeHtmlAttr(__('ID')) ?>"
+                        class="col id">
+                        <?= (int) $subscription->getSubscriptionId() ?>
+                    </td>
+                    <td data-th="<?= $block->escapeHtmlAttr(__('Product')) ?>"
+                        class="col product">
+                        <?= $block->escapeHtml($subscription->getProductId()) ?>
+                    </td>
+                    <td data-th="<?= $block->escapeHtmlAttr(__('Qty')) ?>"
+                        class="col quantity">
+                        <?= (int) $subscription->getQuantity() ?>
+                    </td>
+                    <td data-th="<?= $block->escapeHtmlAttr(__('Frequency')) ?>"
+                        class="col frequency">
+                        <?= $block->escapeHtml(
+                            $block->getFrequencyLabel($subscription->getFrequency())
+                        ) ?>
+                    </td>
+                    <td data-th="<?= $block->escapeHtmlAttr(__('Next Delivery')) ?>"
+                        class="col next-date">
+                        <?= $block->escapeHtml($subscription->getNextDueDate() ?? '—') ?>
+                    </td>
+                    <td data-th="<?= $block->escapeHtmlAttr(__('Status')) ?>"
+                        class="col status">
+                            <span class="subscription-status status-<?= $block->escapeHtmlAttr(
+                                $subscription->getStatus()
+                            ) ?>">
+                                <?= $block->escapeHtml(
+                                    $block->getStatusLabel($subscription->getStatus())
+                                ) ?>
+                            </span>
+                    </td>
+                    <td data-th="<?= $block->escapeHtmlAttr(__('Actions')) ?>"
+                        class="col actions">
+                        <a href="<?= $block->escapeUrl(
+                            $block->getActionUrl('view', $subscription->getSubscriptionId())
+                        ) ?>" class="action view">
+                            <span><?= $block->escapeHtml(__('View')) ?></span>
+                        </a>
+                    </td>
+                </tr>
+                <?php
+                $history = $block->getSubscriptionHistory(
+                    $subscription->getSubscriptionId(),
+                    5
+                );
+                ?>
+                <?php if (!empty($history)): ?>
+                    <tr class="subscription-history-row">
+                        <td colspan="7">
+                            <h4><?= $block->escapeHtml(__('Recent Orders')) ?></h4>
+                            <ul class="subscription-history">
+                                <?php foreach ($history as $log): ?>
+                                    <li>
+                                        <?= $block->escapeHtml($log->getRunDate()) ?>
+                                        —
+                                        <?= $block->escapeHtml($log->getOutcome()) ?>
+                                        <?php if ($log->getOrderId()): ?>
+                                            (Order #<?= (int) $log->getOrderId() ?>)
+                                        <?php endif; ?>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </td>
+                    </tr>
+                <?php endif; ?>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+<?php endif; ?>

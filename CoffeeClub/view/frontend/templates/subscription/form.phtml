@@ -1,0 +1,151 @@
+<?php
+/**
+ * @var \Codilar\CoffeeClub\Block\Product\SubscriptionOption $block
+ */
+$isEdit         = $block->getData('edit_mode');
+$subscription   = $block->getData('subscription');
+$product        = $block->getProduct();
+$frequencies    = $block->getFrequencies();
+$isConfigurable = !$isEdit && $block->isConfigurable();
+?>
+<?php if ($block->isEligible() || $isEdit): ?>
+    <div class="coffeeclub-subscription-form">
+
+        <?php if ($isEdit): ?>
+        <h3><?= $block->escapeHtml(__('Edit Subscription')) ?></h3>
+        <form action="<?= $block->escapeUrl($block->getUrl('coffeeclub/subscription/update')) ?>"
+              method="post"
+              id="coffeeclub-subscription-form"
+              data-mage-init='{"validation": {}}'>
+            <input type="hidden" name="form_key"
+                   value="<?= $block->escapeHtmlAttr($block->getFormKey()) ?>"/>
+            <input type="hidden" name="subscription_id"
+                   value="<?= (int) $subscription->getSubscriptionId() ?>"/>
+            <?php else: ?>
+            <h3><?= $block->escapeHtml(__('Subscribe & Save')) ?></h3>
+            <form action="<?= $block->escapeUrl($block->getUrl('coffeeclub/subscription/create')) ?>"
+                  method="post"
+                  id="coffeeclub-subscription-form"
+                  data-mage-init='{"validation": {}, "Codilar_CoffeeClub/js/subscription-option": {}}'>
+                <input type="hidden" name="form_key"
+                       value="<?= $block->escapeHtmlAttr($block->getFormKey()) ?>"/>
+
+                <?php if ($isConfigurable): ?>
+                    <input type="hidden" name="parent_product_id"
+                           value="<?= (int) $product->getId() ?>"/>
+                    <input type="hidden" name="child_product_id" value=""/>
+                <?php else: ?>
+                    <input type="hidden" name="product_id"
+                           value="<?= (int) $product->getId() ?>"/>
+                <?php endif; ?>
+                <?php endif; ?>
+
+                <?php if ($isConfigurable): ?>
+                    <div class="message info coffeeclub-variant-hint">
+                        <span>
+                            <?= $block->escapeHtml(
+                                __('Please select your product options above to activate the subscription.')
+                            ) ?>
+                        </span>
+                    </div>
+                <?php endif; ?>
+
+                <div class="field required">
+                    <label for="coffeeclub-quantity" class="label">
+                        <span><?= $block->escapeHtml(__('Quantity per delivery')) ?></span>
+                    </label>
+                    <div class="control">
+                        <input type="number"
+                               id="coffeeclub-quantity"
+                               name="quantity"
+                               value="<?= $isEdit ? (int) $subscription->getQuantity() : 1 ?>"
+                               min="1"
+                               class="input-text required-entry validate-number"
+                               data-validate="{required:true, 'validate-greater-than-zero':true}"/>
+                    </div>
+                </div>
+
+                <div class="field required">
+                    <label for="coffeeclub-frequency" class="label">
+                        <span><?= $block->escapeHtml(__('Delivery Frequency')) ?></span>
+                    </label>
+                    <div class="control">
+                        <select id="coffeeclub-frequency"
+                                name="frequency"
+                                class="select required-entry">
+                            <?php foreach ($frequencies as $frequency): ?>
+                                <option value="<?= $block->escapeHtmlAttr($frequency['code']) ?>"
+                                    <?= $isEdit && $subscription->getFrequency() === $frequency['code']
+                                        ? ' selected="selected"' : '' ?>>
+                                    <?= $block->escapeHtml($frequency['label']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+
+                <?php if ($isEdit): ?>
+                    <div class="field required">
+                        <label for="coffeeclub-address" class="label">
+                            <span><?= $block->escapeHtml(__('Delivery Address')) ?></span>
+                        </label>
+                        <div class="control">
+                            <?php $address = json_decode($subscription->getDeliveryAddress(), true); ?>
+                            <input type="text"
+                                   id="coffeeclub-address-street"
+                                   name="delivery_address[street][0]"
+                                   value="<?= $block->escapeHtmlAttr($address['street'][0] ?? '') ?>"
+                                   class="input-text required-entry"
+                                   placeholder="<?= $block->escapeHtmlAttr(__('Street')) ?>"/>
+                            <input type="text"
+                                   name="delivery_address[city]"
+                                   value="<?= $block->escapeHtmlAttr($address['city'] ?? '') ?>"
+                                   class="input-text required-entry"
+                                   placeholder="<?= $block->escapeHtmlAttr(__('City')) ?>"/>
+                            <input type="text"
+                                   name="delivery_address[postcode]"
+                                   value="<?= $block->escapeHtmlAttr($address['postcode'] ?? '') ?>"
+                                   class="input-text required-entry"
+                                   placeholder="<?= $block->escapeHtmlAttr(__('Postcode')) ?>"/>
+                            <input type="text"
+                                   name="delivery_address[telephone]"
+                                   value="<?= $block->escapeHtmlAttr($address['telephone'] ?? '') ?>"
+                                   class="input-text required-entry"
+                                   placeholder="<?= $block->escapeHtmlAttr(__('Telephone')) ?>"/>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <div class="actions-toolbar">
+                    <button type="submit"
+                            class="action primary"
+                        <?= $isConfigurable ? 'disabled="disabled"' : '' ?>>
+                        <span><?= $block->escapeHtml(
+                                $isEdit ? __('Update Subscription') : __('Start Subscription')
+                            ) ?></span>
+                    </button>
+                </div>
+            </form>
+
+            <?php if ($isConfigurable): ?>
+                <?php
+                /**
+                 * Server-generated map: { "size:5|color:10" => 259, ... }
+                 *
+                 * Built from the SAME data Magento uses to render the swatches,
+                 * so it can never disagree with what's on the page.
+                 *
+                 * Our JS reads the currently selected swatch options, builds the
+                 * same key, and looks up the matching simple-product ID.
+                 */
+                ?>
+                <script>
+                    window.coffeeclubParentId = <?= (int) $product->getId() ?>;
+                    window.coffeeclubChildMap = <?= /* @noEscape */ json_encode($block->getChildProductMap()) ?>;
+                    console.log('[CoffeeClub] server map loaded — children:',
+                        Object.keys(window.coffeeclubChildMap || {}).length);
+                </script>
+            <?php endif; ?>
+
+    </div>
+<?php endif; ?>

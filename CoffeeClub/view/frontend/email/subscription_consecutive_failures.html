@@ -1,0 +1,75 @@
+<!--@subject Your Coffee Club subscription has been paused due to repeated failures @-->
+<!--@vars {
+"var customer_name":"Customer Name",
+"var subscription_id":"Subscription ID",
+"var product_name":"Product Name",
+"var failure_count":"Number of Consecutive Failures",
+"var failure_reason":"Reason for the Latest Failure"
+} @-->
+
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f4f4f4; padding:20px 0; font-family:Arial, Helvetica, sans-serif; color:#333;">
+    <tr>
+        <td align="center">
+            <table cellpadding="0" cellspacing="0" border="0" width="600" style="background:#ffffff; border-radius:6px; overflow:hidden;">
+                <tr>
+                    <td style="background:#6b4f3a; color:#ffffff; padding:20px 30px; font-size:20px; font-weight:bold;">
+                        Coffee Club
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:30px;">
+                        <p style="margin:0 0 15px; font-size:16px;">
+                            Hi {{var customer_name}},
+                        </p>
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            We have been unable to process your Coffee Club subscription
+                            <strong>#{{var subscription_id}}</strong>
+                            ({{var product_name}}) for
+                            <strong>{{var failure_count}} consecutive attempts</strong>.
+                        </p>
+
+                        <div style="background:#f8d7da; border-left:4px solid #d9534f; padding:12px 15px; margin:20px 0; font-size:14px; color:#842029;">
+                            <strong>Your subscription has been paused.</strong><br/>
+                            No further orders will be attempted until you resume it.
+                        </div>
+
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            <strong>Reason for the latest failure:</strong>
+                        </p>
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5; padding-left:15px; border-left:3px solid #e0e0e0; color:#555;">
+                            {{var failure_reason}}
+                        </p>
+
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            This usually means the product is no longer available, out of stock,
+                            or there is a problem with your delivery address or payment method.
+                        </p>
+
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            <strong>What to do next:</strong>
+                        </p>
+                        <ol style="margin:0 0 20px; padding-left:20px; font-size:14px; line-height:1.6;">
+                            <li>Sign in to your account.</li>
+                            <li>Open your Coffee Club subscriptions.</li>
+                            <li>Review this subscription's details.</li>
+                            <li>Once resolved, click <strong>Resume Subscription</strong>.</li>
+                        </ol>
+
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            If you need help, please contact our support team.
+                        </p>
+
+                        <p style="margin:20px 0 0; font-size:14px;">
+                            — The Coffee Club Team
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="background:#f9f9f9; padding:15px 30px; font-size:12px; color:#888; text-align:center;">
+                        This is an automated message. Please do not reply directly to this email.
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>

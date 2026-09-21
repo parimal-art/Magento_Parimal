@@ -1,0 +1,5173 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+Api/
+  Data/
+    RunLogInterface.php
+    SubscriptionInterface.php
+  RunLogRepositoryInterface.php
+  SubscriptionRepositoryInterface.php
+Block/
+  Adminhtml/
+    System/
+      Config/
+        Form/
+          Field/
+            FrequencyArray.php
+  Customer/
+    SubscriptionList.php
+    SubscriptionView.php
+  Product/
+    SubscriptionOption.php
+Controller/
+  Subscription/
+    Cancel.php
+    Create.php
+    Index.php
+    Pause.php
+    Resume.php
+    Skip.php
+    Update.php
+    View.php
+Cron/
+  ProcessSubscriptions.php
+etc/
+  adminhtml/
+    system.xml
+  frontend/
+    routes.xml
+  config.xml
+  cron_groups.xml
+  crontab.xml
+  db_schema.xml
+  di.xml
+  email_templates.xml
+  module.xml
+Model/
+  Config/
+    Source/
+      CategoryList.php
+      ProductType.php
+    FrequencyProvider.php
+  ResourceModel/
+    RunLog/
+      Collection.php
+    Subscription/
+      Collection.php
+    RunLog.php
+    Subscription.php
+  Subscription/
+    EmailNotifier.php
+    Fulfilment.php
+    SubscriptionManagement.php
+  CategoryValidator.php
+  ProductTypeValidator.php
+  RunLog.php
+  RunLogRepository.php
+  Subscription.php
+  SubscriptionRepository.php
+view/
+  frontend/
+    email/
+      subscription_cancelled.html
+      subscription_consecutive_failures.html
+      subscription_order_failure.html
+      subscription_order_success.html
+      subscription_paused.html
+      subscription_resumed.html
+      subscription_skipped.html
+      subscription_started.html
+    layout/
+      catalog_product_view.xml
+      coffeeclub_subscription_index.xml
+      coffeeclub_subscription_view.xml
+      customer_account.xml
+    templates/
+      subscription/
+        form.phtml
+        list.phtml
+        view.phtml
+    web/
+      css/
+        source/
+          _extend.less
+      js/
+        subscription-option.js
+composer.json
+registration.php
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="Api/Data/RunLogInterface.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Api\Data;
+
+interface RunLogInterface
+{
+    public const LOG_ID = 'log_id';
+    public const SUBSCRIPTION_ID = 'subscription_id';
+    public const RUN_DATE = 'run_date';
+    public const OUTCOME = 'outcome';
+    public const ORDER_ID = 'order_id';
+    public const FAILURE_REASON = 'failure_reason';
+
+    public const OUTCOME_SUCCESS = 'success';
+    public const OUTCOME_FAILURE = 'failure';
+    public const OUTCOME_SKIPPED = 'skipped';
+
+    /**
+     * @return int|null
+     */
+    public function getLogId(): ?int;
+
+    /**
+     * @param int $logId
+     * @return $this
+     */
+    public function setLogId(int $logId): self;
+
+    /**
+     * @return int
+     */
+    public function getSubscriptionId(): int;
+
+    /**
+     * @param int $subscriptionId
+     * @return $this
+     */
+    public function setSubscriptionId(int $subscriptionId): self;
+
+    /**
+     * @return string
+     */
+    public function getRunDate(): string;
+
+    /**
+     * @param string $runDate
+     * @return $this
+     */
+    public function setRunDate(string $runDate): self;
+
+    /**
+     * @return string
+     */
+    public function getOutcome(): string;
+
+    /**
+     * @param string $outcome
+     * @return $this
+     */
+    public function setOutcome(string $outcome): self;
+
+    /**
+     * @return int|null
+     */
+    public function getOrderId(): ?int;
+
+    /**
+     * @param int|null $orderId
+     * @return $this
+     */
+    public function setOrderId(?int $orderId): self;
+
+    /**
+     * @return string|null
+     */
+    public function getFailureReason(): ?string;
+
+    /**
+     * @param string|null $failureReason
+     * @return $this
+     */
+    public function setFailureReason(?string $failureReason): self;
+}
+</file>
+
+<file path="Api/Data/SubscriptionInterface.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Api\Data;
+
+interface SubscriptionInterface
+{
+    public const SUBSCRIPTION_ID = 'subscription_id';
+    public const CUSTOMER_ID = 'customer_id';
+    public const PRODUCT_ID = 'product_id';
+    public const PARENT_PRODUCT_ID = 'parent_product_id';
+    public const QUANTITY = 'quantity';
+    public const AGREED_PRICE = 'agreed_price';
+    public const FREQUENCY = 'frequency';
+    public const DELIVERY_ADDRESS = 'delivery_address';
+    public const STATUS = 'status';
+    public const NEXT_DUE_DATE = 'next_due_date';
+    public const LAST_RUN_DATE = 'last_run_date';
+    public const CONSECUTIVE_FAILURE_COUNT = 'consecutive_failure_count';
+    public const CREATED_AT = 'created_at';
+    public const UPDATED_AT = 'updated_at';
+
+    public const STATUS_ACTIVE = 'active';
+    public const STATUS_PAUSED = 'paused';
+    public const STATUS_CANCELLED = 'cancelled';
+
+    // Frequency constants removed — frequencies are now admin-configurable.
+    // See Codilar\CoffeeClub\Model\Config\FrequencyProvider.
+
+    /**
+     * @return int|null
+     */
+    public function getSubscriptionId(): ?int;
+
+    /**
+     * @param int $subscriptionId
+     * @return $this
+     */
+    public function setSubscriptionId(int $subscriptionId): self;
+
+    /**
+     * @return int
+     */
+    public function getCustomerId(): int;
+
+    /**
+     * @param int $customerId
+     * @return $this
+     */
+    public function setCustomerId(int $customerId): self;
+
+    /**
+     * @return int
+     */
+    public function getProductId(): int;
+
+    /**
+     * @param int $productId
+     * @return $this
+     */
+    public function setProductId(int $productId): self;
+
+    /**
+     * @return int|null
+     */
+    public function getParentProductId(): ?int;
+
+    /**
+     * @param int|null $parentProductId
+     * @return $this
+     */
+    public function setParentProductId(?int $parentProductId): self;
+
+    /**
+     * @return int
+     */
+    public function getQuantity(): int;
+
+    /**
+     * @param int $quantity
+     * @return $this
+     */
+    public function setQuantity(int $quantity): self;
+
+    /**
+     * @return float
+     */
+    public function getAgreedPrice(): float;
+
+    /**
+     * @param float $agreedPrice
+     * @return $this
+     */
+    public function setAgreedPrice(float $agreedPrice): self;
+
+    /**
+     * @return string
+     */
+    public function getFrequency(): string;
+
+    /**
+     * @param string $frequency
+     * @return $this
+     */
+    public function setFrequency(string $frequency): self;
+
+    /**
+     * @return string
+     */
+    public function getDeliveryAddress(): string;
+
+    /**
+     * @param string $deliveryAddress
+     * @return $this
+     */
+    public function setDeliveryAddress(string $deliveryAddress): self;
+
+    /**
+     * @return string
+     */
+    public function getStatus(): string;
+
+    /**
+     * @param string $status
+     * @return $this
+     */
+    public function setStatus(string $status): self;
+
+    /**
+     * @return string|null
+     */
+    public function getNextDueDate(): ?string;
+
+    /**
+     * @param string|null $nextDueDate
+     * @return $this
+     */
+    public function setNextDueDate(?string $nextDueDate): self;
+
+    /**
+     * @return string|null
+     */
+    public function getLastRunDate(): ?string;
+
+    /**
+     * @param string|null $lastRunDate
+     * @return $this
+     */
+    public function setLastRunDate(?string $lastRunDate): self;
+
+    /**
+     * @return int
+     */
+    public function getConsecutiveFailureCount(): int;
+
+    /**
+     * @param int $consecutiveFailureCount
+     * @return $this
+     */
+    public function setConsecutiveFailureCount(int $consecutiveFailureCount): self;
+}
+</file>
+
+<file path="Api/RunLogRepositoryInterface.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Api;
+
+use Codilar\CoffeeClub\Api\Data\RunLogInterface;
+use Magento\Framework\Api\SearchCriteriaInterface;
+use Magento\Framework\Api\SearchResultsInterface;
+use Magento\Framework\Exception\CouldNotSaveException;
+
+interface RunLogRepositoryInterface
+{
+    /**
+     * Save run log
+     *
+     * @param RunLogInterface $runLog
+     * @return RunLogInterface
+     * @throws CouldNotSaveException
+     */
+    public function save(RunLogInterface $runLog): RunLogInterface;
+
+    /**
+     * Get run logs by subscription ID
+     *
+     * @param int $subscriptionId
+     * @param int $limit
+     * @return RunLogInterface[]
+     */
+    public function getBySubscriptionId(int $subscriptionId, int $limit = 50): array;
+
+    /**
+     * Get list of run logs
+     *
+     * @param SearchCriteriaInterface $searchCriteria
+     * @return SearchResultsInterface
+     */
+    public function getList(SearchCriteriaInterface $searchCriteria): SearchResultsInterface;
+}
+</file>
+
+<file path="Api/SubscriptionRepositoryInterface.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Api;
+
+use Codilar\CoffeeClub\Api\Data\SubscriptionInterface;
+use Magento\Framework\Api\SearchCriteriaInterface;
+use Magento\Framework\Api\SearchResultsInterface;
+use Magento\Framework\Exception\CouldNotDeleteException;
+use Magento\Framework\Exception\CouldNotSaveException;
+use Magento\Framework\Exception\NoSuchEntityException;
+
+interface SubscriptionRepositoryInterface
+{
+    /**
+     * Save subscription
+     *
+     * @param SubscriptionInterface $subscription
+     * @return SubscriptionInterface
+     * @throws CouldNotSaveException
+     */
+    public function save(SubscriptionInterface $subscription): SubscriptionInterface;
+
+    /**
+     * Get subscription by ID
+     *
+     * @param int $subscriptionId
+     * @return SubscriptionInterface
+     * @throws NoSuchEntityException
+     */
+    public function getById(int $subscriptionId): SubscriptionInterface;
+
+    /**
+     * Get list of subscriptions
+     *
+     * @param SearchCriteriaInterface $searchCriteria
+     * @return SearchResultsInterface
+     */
+    public function getList(SearchCriteriaInterface $searchCriteria): SearchResultsInterface;
+
+    /**
+     * Delete subscription
+     *
+     * @param SubscriptionInterface $subscription
+     * @return bool
+     * @throws CouldNotDeleteException
+     */
+    public function delete(SubscriptionInterface $subscription): bool;
+
+    /**
+     * Delete subscription by ID
+     *
+     * @param int $subscriptionId
+     * @return bool
+     * @throws NoSuchEntityException
+     * @throws CouldNotDeleteException
+     */
+    public function deleteById(int $subscriptionId): bool;
+}
+</file>
+
+<file path="Block/Adminhtml/System/Config/Form/Field/FrequencyArray.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Block\Adminhtml\System\Config\Form\Field;
+
+use Magento\Config\Block\System\Config\Form\Field\FieldArray\AbstractFieldArray;
+
+/**
+ * Renders the "Available Frequencies" admin field as a dynamic row grid.
+ *
+ * Each row has three columns: code, label, modifier.
+ * Values are persisted as a JSON array by ArraySerialized backend model.
+ *
+ * Backwards compatible with the previous textarea format:
+ * "code:Label:+N unit" one per line — auto-converted to rows on first load.
+ */
+class FrequencyArray extends AbstractFieldArray
+{
+    /**
+     * Define the columns and the "Add Row" button.
+     *
+     * @return void
+     */
+    protected function _prepareToRender()
+    {
+        $this->addColumn('code', [
+            'label' => __('Code'),
+            'class' => 'required-entry admin__control-text',
+            'style' => 'width: 140px;',
+        ]);
+
+        $this->addColumn('label', [
+            'label' => __('Label'),
+            'class' => 'required-entry admin__control-text',
+            'style' => 'width: 220px;',
+        ]);
+
+        $this->addColumn('modifier', [
+            'label' => __('Date Modifier'),
+            'class' => 'required-entry admin__control-text',
+            'style' => 'width: 170px;',
+        ]);
+
+        $this->_addAfter = false;
+        $this->_addButtonLabel = __('Add Frequency');
+    }
+
+    /**
+     * Decode the stored config value into rows.
+     *
+     * Handles (in order of priority):
+     *   1. Already an array (Magento may pass this in some flows)
+     *   2. JSON  — new format written by the ArraySerialized backend model
+     *   3. PHP-serialized array — fallback for older Magento serialization
+     *   4. Legacy plain-text "code:Label:+N unit" one per line
+     *
+     * @return array
+     */
+    protected function _getValue()
+    {
+        $raw = $this->getElement()->getValue();
+
+        if (is_array($raw)) {
+            return $raw;
+        }
+
+        if (!is_string($raw) || $raw === '') {
+            return [];
+        }
+
+        // 1. JSON
+        $decoded = json_decode($raw, true);
+        if (is_array($decoded)) {
+            return $decoded;
+        }
+
+        // 2. PHP serialized
+        if (preg_match('/^a:\d+:{/', $raw)) {
+            $unserialized = @unserialize($raw, ['allowed_classes' => false]);
+            if (is_array($unserialized)) {
+                return $unserialized;
+            }
+        }
+
+        // 3. Legacy textarea: "code:Label:+N unit" per line
+        if (strpos($raw, ':') !== false) {
+            $rows = [];
+            $lines = preg_split('/\r\n|\r|\n/', $raw) ?: [];
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if ($line === '') {
+                    continue;
+                }
+                $parts = array_map('trim', explode(':', $line, 3));
+                if (count($parts) !== 3) {
+                    continue;
+                }
+                [$code, $label, $modifier] = $parts;
+                if ($code === '' || $modifier === '') {
+                    continue;
+                }
+                $rows[] = [
+                    'code' => $code,
+                    'label' => $label,
+                    'modifier' => $modifier,
+                ];
+            }
+            if (!empty($rows)) {
+                return $rows;
+            }
+        }
+
+        return [];
+    }
+}
+</file>
+
+<file path="Block/Customer/SubscriptionList.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Block\Customer;
+
+use Codilar\CoffeeClub\Api\RunLogRepositoryInterface;
+use Codilar\CoffeeClub\Api\SubscriptionRepositoryInterface;
+use Codilar\CoffeeClub\Model\Config\FrequencyProvider;
+use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Framework\Api\SearchCriteriaBuilder;
+use Magento\Framework\Phrase;
+use Magento\Framework\View\Element\Template;
+
+class SubscriptionList extends Template
+{
+    public function __construct(
+        Template\Context                          $context,
+        protected CustomerSession                 $customerSession,
+        protected SubscriptionRepositoryInterface $subscriptionRepository,
+        protected RunLogRepositoryInterface       $runLogRepository,
+        protected SearchCriteriaBuilder           $searchCriteriaBuilder,
+        protected FrequencyProvider               $frequencyProvider,
+        array                                     $data = []
+    )
+    {
+        parent::__construct($context, $data);
+    }
+
+    public function getSubscriptions(): array
+    {
+        $customerId = (int)$this->customerSession->getCustomerId();
+        if (!$customerId) {
+            return [];
+        }
+
+        $searchCriteria = $this->searchCriteriaBuilder
+            ->addFilter('customer_id', $customerId)
+            ->create();
+
+        $result = $this->subscriptionRepository->getList($searchCriteria);
+        return $result->getItems();
+    }
+
+    public function getSubscriptionHistory(int $subscriptionId, int $limit = 10): array
+    {
+        return $this->runLogRepository->getBySubscriptionId($subscriptionId, $limit);
+    }
+
+    public function hasSubscriptions(): bool
+    {
+        return !empty($this->getSubscriptions());
+    }
+
+    public function getActionUrl(string $action, int $subscriptionId): string
+    {
+        return $this->getUrl('coffeeclub/subscription/' . $action, [
+            'subscription_id' => $subscriptionId
+        ]);
+    }
+
+    public function getFrequencyLabel(string $frequency): Phrase
+    {
+        return __($this->frequencyProvider->getLabel($frequency));
+    }
+
+    public function getStatusLabel(string $status): Phrase
+    {
+        return match ($status) {
+            'active' => __('Active'),
+            'paused' => __('Paused'),
+            'cancelled' => __('Cancelled'),
+            default => __('Unknown'),
+        };
+    }
+}
+</file>
+
+<file path="Block/Customer/SubscriptionView.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Block\Customer;
+
+use Codilar\CoffeeClub\Api\RunLogRepositoryInterface;
+use Codilar\CoffeeClub\Api\SubscriptionRepositoryInterface;
+use Codilar\CoffeeClub\Model\Config\FrequencyProvider;
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\View\Element\Template;
+
+class SubscriptionView extends Template
+{
+    public function __construct(
+        Template\Context                          $context,
+        protected SubscriptionRepositoryInterface $subscriptionRepository,
+        protected RunLogRepositoryInterface       $runLogRepository,
+        protected RequestInterface                $request,
+        protected FrequencyProvider               $frequencyProvider,
+        array                                     $data = []
+    ) {
+        parent::__construct($context, $data);
+    }
+
+    public function getSubscription()
+    {
+        $id = (int) $this->request->getParam('subscription_id');
+        try {
+            return $this->subscriptionRepository->getById($id);
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    public function getSubscriptionHistory(int $subscriptionId)
+    {
+        return $this->runLogRepository->getBySubscriptionId($subscriptionId, 20);
+    }
+
+    /**
+     * Return configured subscription frequencies for the edit form dropdown.
+     *
+     * @return array<int, array{code: string, label: string}>
+     */
+    public function getFrequencies(): array
+    {
+        $result = [];
+        foreach ($this->frequencyProvider->getAll() as $code => $data) {
+            $result[] = [
+                'code'  => (string) $code,
+                'label' => (string) $data['label'],
+            ];
+        }
+        return $result;
+    }
+}
+</file>
+
+<file path="Block/Product/SubscriptionOption.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Block\Product;
+
+use Codilar\CoffeeClub\Model\CategoryValidator;
+use Codilar\CoffeeClub\Model\Config\FrequencyProvider;
+use Codilar\CoffeeClub\Model\ProductTypeValidator;
+use Magento\Catalog\Api\Data\ProductInterface;
+use Magento\Framework\Registry;
+use Magento\Framework\View\Element\Template;
+use Throwable;
+
+class SubscriptionOption extends Template
+{
+    public function __construct(
+        Template\Context               $context,
+        protected Registry             $registry,
+        protected CategoryValidator    $categoryValidator,
+        protected ProductTypeValidator $productTypeValidator,
+        protected FrequencyProvider    $frequencyProvider,
+        array                          $data = []
+    )
+    {
+        parent::__construct($context, $data);
+    }
+
+    public function getProduct(): ?ProductInterface
+    {
+        return $this->registry->registry('current_product');
+    }
+
+    public function isEligible(): bool
+    {
+        $product = $this->getProduct();
+        if (!$product) {
+            return false;
+        }
+        if (!$this->productTypeValidator->isEligibleType($product)) {
+            return false;
+        }
+        try {
+            $categoryIds = $product->getCategoryIds();
+            return $this->categoryValidator->isProductInAllowedCategory($categoryIds);
+        } catch (\Exception $exception) {
+            return false;
+        }
+    }
+
+    public function isConfigurable(): bool
+    {
+        $product = $this->getProduct();
+        return $product !== null && $product->getTypeId() === 'configurable';
+    }
+
+    public function getFrequencies(): array
+    {
+        $result = [];
+        foreach ($this->frequencyProvider->getAll() as $code => $data) {
+            $result[] = [
+                'code' => (string)$code,
+                'label' => (string)$data['label'],
+            ];
+        }
+        return $result;
+    }
+
+    /**
+     * Build a map of { "attribute_code:optionId|attribute_code:optionId" => child_product_id }.
+     *
+     * The key is built from the CONFIGURABLE ATTRIBUTE CODES and the option value
+     * IDs (which is exactly what the swatch renderer writes into the DOM as
+     * `option-id`, and what PHP stores in each child product's data).
+     *
+     * Key is normalised (attributes sorted alphabetically) so it can be matched
+     * deterministically on the client.
+     *
+     * @return array<string, int>
+     */
+    public function getChildProductMap(): array
+    {
+        $product = $this->getProduct();
+        if (!$product || $product->getTypeId() !== 'configurable') {
+            return [];
+        }
+
+        try {
+            $typeInstance = $product->getTypeInstance();
+            $usedProducts = $typeInstance->getUsedProducts($product);  //retrieve all child product
+            $attributes = $typeInstance->getConfigurableAttributesAsArray($product);  //retrieve attributes
+        } catch (Throwable $exception) {
+            return [];
+        }
+
+        $attributeCodes = [];
+        foreach ($attributes as $attribute) {
+            if (!empty($attribute['attribute_code'])) {
+                $attributeCodes[] = (string)$attribute['attribute_code'];
+            }
+        }
+
+        $map = [];
+        foreach ($usedProducts as $child) {
+            $keyPairs = [];
+            foreach ($attributeCodes as $code) {
+                $value = $child->getData($code);
+                if ($value !== null && $value !== '') {
+                    $keyPairs[$code] = (string)$value;
+                }
+            }
+            // Sort keys alphabetically so the key ordering is stable.
+            ksort($keyPairs);
+
+            $key = implode('|', array_map(
+                static fn($k, $v) => $k . ':' . $v,
+                array_keys($keyPairs),
+                array_values($keyPairs)
+            ));
+
+            $map[$key] = (int)$child->getId();
+        }
+
+        return $map;
+    }
+}
+</file>
+
+<file path="Controller/Subscription/Cancel.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Controller\Subscription;
+
+use Codilar\CoffeeClub\Model\Subscription\SubscriptionManagement;
+use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Framework\App\Action\HttpPostActionInterface;
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Controller\Result\RedirectFactory;
+use Magento\Framework\Data\Form\FormKey\Validator;
+use Magento\Framework\Message\ManagerInterface;
+
+class Cancel implements HttpPostActionInterface
+{
+    public function __construct(
+        protected CustomerSession $customerSession,
+        protected SubscriptionManagement $subscriptionManagement,
+        protected Validator $formKeyValidator,
+        protected ManagerInterface $messageManager,
+        protected RedirectFactory $redirectFactory,
+        protected RequestInterface $request
+    ) {
+    }
+
+    public function execute()
+    {
+        $redirect = $this->redirectFactory->create();
+
+        if (!$this->customerSession->isLoggedIn()) {
+            return $redirect->setPath('customer/account/login');
+        }
+
+        if (!$this->formKeyValidator->validate($this->request)) {
+            $this->messageManager->addErrorMessage(
+                __('Invalid form key. Please try again.')
+            );
+            return $redirect->setPath('coffeeclub/subscription/index');
+        }
+
+        $subscriptionId = (int) $this->request->getParam('subscription_id');
+        $customerId = (int) $this->customerSession->getCustomerId();
+
+        try {
+            $this->subscriptionManagement->cancel($subscriptionId, $customerId);
+            $this->messageManager->addSuccessMessage(
+                __('Subscription cancelled. Your history has been preserved.')
+            );
+        } catch (\Exception $exception) {
+            $this->messageManager->addErrorMessage($exception->getMessage());
+        }
+
+        return $redirect->setPath('coffeeclub/subscription/index');
+    }
+}
+</file>
+
+<file path="Controller/Subscription/Create.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Controller\Subscription;
+
+use Codilar\CoffeeClub\Api\Data\SubscriptionInterface;
+use Codilar\CoffeeClub\Api\SubscriptionRepositoryInterface;
+use Codilar\CoffeeClub\Model\CategoryValidator;
+use Codilar\CoffeeClub\Model\Config\FrequencyProvider;
+use Codilar\CoffeeClub\Model\ProductTypeValidator;
+use Codilar\CoffeeClub\Model\Subscription\EmailNotifier;
+use Codilar\CoffeeClub\Model\Subscription\SubscriptionManagement;
+use Codilar\CoffeeClub\Model\SubscriptionFactory;
+use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\Customer\Api\AddressRepositoryInterface;
+use Magento\Customer\Api\Data\RegionInterface;
+use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Framework\App\Action\HttpPostActionInterface;
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Controller\Result\RedirectFactory;
+use Magento\Framework\Data\Form\FormKey\Validator;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Message\ManagerInterface;
+use Magento\Framework\Serialize\Serializer\Json;
+use Throwable;
+
+class Create implements HttpPostActionInterface
+{
+    public function __construct(
+        protected CustomerSession                 $customerSession,
+        protected ProductRepositoryInterface      $productRepository,
+        protected SubscriptionRepositoryInterface $subscriptionRepository,
+        protected SubscriptionFactory             $subscriptionFactory,
+        protected SubscriptionManagement          $subscriptionManagement,
+        protected CategoryValidator               $categoryValidator,
+        protected ProductTypeValidator            $productTypeValidator,
+        protected AddressRepositoryInterface      $addressRepository,
+        protected Validator                       $formKeyValidator,
+        protected ManagerInterface                $messageManager,
+        protected RedirectFactory                 $redirectFactory,
+        protected RequestInterface                $request,
+        protected Json                            $json,
+        protected FrequencyProvider               $frequencyProvider,
+        protected EmailNotifier                   $emailNotifier
+    )
+    {
+    }
+
+    public function execute()
+    {
+        $redirect = $this->redirectFactory->create();
+
+        if (!$this->customerSession->isLoggedIn()) {
+            $this->messageManager->addErrorMessage(
+                __('Please log in to create a subscription.')
+            );
+            return $redirect->setPath('customer/account/login');
+        }
+
+        if (!$this->formKeyValidator->validate($this->request)) {
+            $this->messageManager->addErrorMessage(
+                __('Invalid form key. Please try again.')
+            );
+            return $redirect->setPath('coffeeclub/subscription/index');
+        }
+
+        $parentProductId = (int)$this->request->getParam('parent_product_id');
+        $childProductId = (int)$this->request->getParam('child_product_id');
+        $simpleProductId = (int)$this->request->getParam('product_id');
+        $quantity = max(1, (int)$this->request->getParam('quantity', 1));
+        $frequency = (string)$this->request->getParam('frequency');
+
+        try {
+            if ($parentProductId > 0) {
+                // -------- Configurable product path --------
+
+                // Guard #1: a real variant must have been captured client-side.
+                if ($childProductId <= 0) {
+                    throw new LocalizedException(
+                        __('Please select a product variant before starting a subscription.')
+                    );
+                }
+
+                // Guard #2: the parent ID must never be submitted as a child.
+                // Magento initialises the hidden #product input with the parent
+                // ID, so if the customer never completed a selection this is
+                // exactly what ends up here.
+                if ($childProductId === $parentProductId) {
+                    throw new LocalizedException(
+                        __('Please select a product variant before starting a subscription.')
+                    );
+                }
+
+                $parentProduct = $this->productRepository->getById($parentProductId);
+                $product = $this->productRepository->getById($childProductId);
+
+                // Guard #3: the submitted child must actually belong to the parent.
+                if (!$this->isChildOfParent($parentProduct, $childProductId)) {
+                    throw new LocalizedException(
+                        __('Selected variant does not belong to this product.')
+                    );
+                }
+
+                $productId = $childProductId;
+            } else {
+                // -------- Simple product path --------
+                $productId = $simpleProductId;
+                $product = $this->productRepository->getById($productId);
+                $parentProductId = null;
+            }
+
+            $categoryIds = $product->getCategoryIds();
+            if (!$this->categoryValidator->isProductInAllowedCategory($categoryIds)) {
+                throw new LocalizedException(
+                    __('Subscriptions are not available for this product category.')
+                );
+            }
+
+            $this->productTypeValidator->assertEligibleType($product);
+
+            if (!$product->isSalable()) {
+                throw new LocalizedException(
+                    __('This product is currently out of stock.')
+                );
+            }
+
+            if (!$this->frequencyProvider->isValid($frequency)) {
+                throw new LocalizedException(
+                    __('Invalid delivery frequency.')
+                );
+            }
+
+            $customerId = (int)$this->customerSession->getCustomerId();
+            $customer = $this->customerSession->getCustomer();
+
+            // Build the delivery address from the customer's default shipping address.
+            // Throws a friendly exception if the customer has none, or if it is incomplete.
+            $addressData = $this->buildAddressFromCustomer($customer);
+            $this->assertDeliveryAddressIsComplete($addressData);
+
+            /** @var SubscriptionInterface $subscription */
+            $subscription = $this->subscriptionFactory->create();
+            $subscription->setCustomerId($customerId);
+            $subscription->setProductId($productId);
+            $subscription->setParentProductId($parentProductId);
+            $subscription->setQuantity($quantity);
+            $subscription->setAgreedPrice((float)$product->getFinalPrice());
+            $subscription->setFrequency($frequency);
+            $subscription->setDeliveryAddress($this->json->serialize($addressData));
+            $subscription->setStatus(SubscriptionInterface::STATUS_ACTIVE);
+            $subscription->setNextDueDate((new \DateTime())->format('Y-m-d'));
+            $subscription->setConsecutiveFailureCount(0);
+
+            // Save, then notify. The repository returns the authoritative object.
+            $saved = $this->subscriptionRepository->save($subscription);
+            $this->emailNotifier->notifyStarted($saved);
+
+            $this->messageManager->addSuccessMessage(
+                __('Your subscription has been created.')
+            );
+            return $redirect->setPath('coffeeclub/subscription/index');
+        } catch (Throwable $exception) {
+            $this->messageManager->addErrorMessage($exception->getMessage());
+            return $redirect->setPath(
+                'catalog/product/view',
+                ['id' => $parentProductId ?: $simpleProductId]
+            );
+        }
+    }
+
+    /**
+     * @param \Magento\Catalog\Api\Data\ProductInterface $parent
+     * @param int $childId
+     * @return bool
+     */
+    private function isChildOfParent($parent, int $childId): bool
+    {
+        $children = $parent->getTypeInstance()->getUsedProducts($parent);
+        foreach ($children as $child) {
+            if ((int)$child->getId() === $childId) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Build address data from the customer's default shipping address.
+     *
+     * If the customer has no default shipping address, a clear exception is thrown
+     * so the subscription is never created with an empty delivery address.
+     *
+     * @param \Magento\Customer\Model\Data\Customer $customer
+     * @return array
+     * @throws LocalizedException
+     */
+    private function buildAddressFromCustomer($customer): array
+    {
+        $defaultShippingId = $customer->getDefaultShipping();
+        if (!$defaultShippingId) {
+            throw new LocalizedException(
+                __(
+                    'Before starting a subscription, kindly set a default shipping address ' .
+                    'in your account. Go to My Account → Address Book to add one.'
+                )
+            );
+        }
+
+        try {
+            $defaultAddress = $this->addressRepository->getById((int)$defaultShippingId);
+        } catch (Throwable $exception) {
+            throw new LocalizedException(
+                __(
+                    'We could not load your default shipping address. ' .
+                    'Please check your address book and try again.'
+                )
+            );
+        }
+
+        $street = $defaultAddress->getStreet();
+
+        $address = [
+            'firstname' => (string)($defaultAddress->getFirstname() ?: $customer->getFirstname()),
+            'lastname' => (string)($defaultAddress->getLastname() ?: $customer->getLastname()),
+            'street' => is_array($street) ? $street : [(string)$street],
+            'city' => (string)$defaultAddress->getCity(),
+            'postcode' => (string)$defaultAddress->getPostcode(),
+            'country_id' => (string)$defaultAddress->getCountryId(),
+            'telephone' => (string)$defaultAddress->getTelephone(),
+            'region' => '',
+            'region_id' => (int)$defaultAddress->getRegionId(),
+        ];
+
+        $region = $defaultAddress->getRegion();
+        if ($region instanceof RegionInterface) {
+            $address['region'] = (string)$region->getRegion();
+            if (empty($address['region_id'])) {
+                $address['region_id'] = (int)$region->getRegionId();
+            }
+        } elseif (is_string($region)) {
+            $address['region'] = $region;
+        }
+
+        return $address;
+    }
+
+    /**
+     * Ensure every field that Magento needs for a quote is present.
+     *
+     * The fields validated here mirror exactly what QuoteManagement::submit()
+     * requires; without them the cron-created order fails.
+     *
+     * @param array $addressData
+     * @throws LocalizedException
+     */
+    private function assertDeliveryAddressIsComplete(array $addressData): void
+    {
+        $missing = [];
+
+        $streetLine = '';
+        $street = $addressData['street'] ?? [];
+        if (is_array($street)) {
+            $streetLine = trim((string)($street[0] ?? ''));
+        } else {
+            $streetLine = trim((string)$street);
+        }
+        if ($streetLine === '') {
+            $missing[] = __('Street Address');
+        }
+
+        if (trim((string)($addressData['city'] ?? '')) === '') {
+            $missing[] = __('City');
+        }
+
+        if (trim((string)($addressData['postcode'] ?? '')) === '') {
+            $missing[] = __('Postcode');
+        }
+
+        if (trim((string)($addressData['telephone'] ?? '')) === '') {
+            $missing[] = __('Telephone');
+        }
+
+        if (empty($missing)) {
+            return;
+        }
+
+        $labels = array_map(
+            static fn($phrase) => (string)$phrase,
+            $missing
+        );
+
+        throw new LocalizedException(
+            __(
+                'Before starting a subscription, kindly fill all required delivery data. ' .
+                'The following field(s) are missing from your default shipping address: %1. ' .
+                'Please update your address in My Account → Address Book.',
+                implode(', ', $labels)
+            )
+        );
+    }
+}
+</file>
+
+<file path="Controller/Subscription/Index.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Controller\Subscription;
+
+use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Framework\App\Action\HttpGetActionInterface;
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Controller\Result\RedirectFactory;
+use Magento\Framework\View\Result\PageFactory;
+
+class Index implements HttpGetActionInterface
+{
+    public function __construct(
+        protected CustomerSession $customerSession,
+        protected PageFactory $pageFactory,
+        protected RedirectFactory $redirectFactory,
+        protected RequestInterface $request
+    ) {
+    }
+
+    public function execute()
+    {
+        if (!$this->customerSession->isLoggedIn()) {
+            return $this->redirectFactory->create()
+                ->setPath('customer/account/login');
+        }
+
+        $resultPage = $this->pageFactory->create();
+        $resultPage->getConfig()->getTitle()->set(__('My Coffee Club Subscriptions'));
+
+        return $resultPage;
+    }
+}
+</file>
+
+<file path="Controller/Subscription/Pause.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Controller\Subscription;
+
+use Codilar\CoffeeClub\Model\Subscription\SubscriptionManagement;
+use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Framework\App\Action\HttpPostActionInterface;
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Controller\Result\RedirectFactory;
+use Magento\Framework\Data\Form\FormKey\Validator;
+use Magento\Framework\Message\ManagerInterface;
+
+class Pause implements HttpPostActionInterface
+{
+    public function __construct(
+        protected CustomerSession $customerSession,
+        protected SubscriptionManagement $subscriptionManagement,
+        protected Validator $formKeyValidator,
+        protected ManagerInterface $messageManager,
+        protected RedirectFactory $redirectFactory,
+        protected RequestInterface $request
+    ) {
+    }
+
+    public function execute()
+    {
+        $redirect = $this->redirectFactory->create();
+
+        if (!$this->customerSession->isLoggedIn()) {
+            return $redirect->setPath('customer/account/login');
+        }
+
+        if (!$this->formKeyValidator->validate($this->request)) {
+            $this->messageManager->addErrorMessage(
+                __('Invalid form key. Please try again.')
+            );
+            return $redirect->setPath('coffeeclub/subscription/index');
+        }
+
+        $subscriptionId = (int) $this->request->getParam('subscription_id');
+        $customerId = (int) $this->customerSession->getCustomerId();
+
+        try {
+            $this->subscriptionManagement->pause($subscriptionId, $customerId);
+            $this->messageManager->addSuccessMessage(__('Subscription paused.'));
+        } catch (\Exception $exception) {
+            $this->messageManager->addErrorMessage($exception->getMessage());
+        }
+
+        return $redirect->setPath('coffeeclub/subscription/index');
+    }
+}
+</file>
+
+<file path="Controller/Subscription/Resume.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Controller\Subscription;
+
+use Codilar\CoffeeClub\Model\Subscription\SubscriptionManagement;
+use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Framework\App\Action\HttpPostActionInterface;
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Controller\Result\RedirectFactory;
+use Magento\Framework\Data\Form\FormKey\Validator;
+use Magento\Framework\Message\ManagerInterface;
+
+class Resume implements HttpPostActionInterface
+{
+    public function __construct(
+        protected CustomerSession $customerSession,
+        protected SubscriptionManagement $subscriptionManagement,
+        protected Validator $formKeyValidator,
+        protected ManagerInterface $messageManager,
+        protected RedirectFactory $redirectFactory,
+        protected RequestInterface $request
+    ) {
+    }
+
+    public function execute()
+    {
+        $redirect = $this->redirectFactory->create();
+
+        if (!$this->customerSession->isLoggedIn()) {
+            return $redirect->setPath('customer/account/login');
+        }
+
+        if (!$this->formKeyValidator->validate($this->request)) {
+            $this->messageManager->addErrorMessage(
+                __('Invalid form key. Please try again.')
+            );
+            return $redirect->setPath('coffeeclub/subscription/index');
+        }
+
+        $subscriptionId = (int) $this->request->getParam('subscription_id');
+        $customerId = (int) $this->customerSession->getCustomerId();
+
+        try {
+            $this->subscriptionManagement->resume($subscriptionId, $customerId);
+            $this->messageManager->addSuccessMessage(__('Subscription resumed.'));
+        } catch (\Exception $exception) {
+            $this->messageManager->addErrorMessage($exception->getMessage());
+        }
+
+        return $redirect->setPath('coffeeclub/subscription/index');
+    }
+}
+</file>
+
+<file path="Controller/Subscription/Skip.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Controller\Subscription;
+
+use Codilar\CoffeeClub\Model\Subscription\SubscriptionManagement;
+use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Framework\App\Action\HttpPostActionInterface;
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Controller\Result\RedirectFactory;
+use Magento\Framework\Data\Form\FormKey\Validator;
+use Magento\Framework\Message\ManagerInterface;
+
+class Skip implements HttpPostActionInterface
+{
+    public function __construct(
+        protected CustomerSession $customerSession,
+        protected SubscriptionManagement $subscriptionManagement,
+        protected Validator $formKeyValidator,
+        protected ManagerInterface $messageManager,
+        protected RedirectFactory $redirectFactory,
+        protected RequestInterface $request
+    ) {
+    }
+
+    public function execute()
+    {
+        $redirect = $this->redirectFactory->create();
+
+        if (!$this->customerSession->isLoggedIn()) {
+            return $redirect->setPath('customer/account/login');
+        }
+
+        if (!$this->formKeyValidator->validate($this->request)) {
+            $this->messageManager->addErrorMessage(
+                __('Invalid form key. Please try again.')
+            );
+            return $redirect->setPath('coffeeclub/subscription/index');
+        }
+
+        $subscriptionId = (int) $this->request->getParam('subscription_id');
+        $customerId = (int) $this->customerSession->getCustomerId();
+
+        try {
+            $this->subscriptionManagement->skipNext($subscriptionId, $customerId);
+            $this->messageManager->addSuccessMessage(
+                __('Next delivery skipped. Your following delivery will proceed as scheduled.')
+            );
+        } catch (\Exception $exception) {
+            $this->messageManager->addErrorMessage($exception->getMessage());
+        }
+
+        return $redirect->setPath('coffeeclub/subscription/index');
+    }
+}
+</file>
+
+<file path="Controller/Subscription/Update.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Controller\Subscription;
+
+use Codilar\CoffeeClub\Api\SubscriptionRepositoryInterface;
+use Codilar\CoffeeClub\Model\Config\FrequencyProvider;
+use Codilar\CoffeeClub\Model\Subscription\SubscriptionManagement;
+use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Framework\App\Action\HttpPostActionInterface;
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Controller\Result\RedirectFactory;
+use Magento\Framework\Data\Form\FormKey\Validator;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Message\ManagerInterface;
+use Magento\Framework\Serialize\Serializer\Json;
+use Throwable;
+
+class Update implements HttpPostActionInterface
+{
+    public function __construct(
+        protected CustomerSession                 $customerSession,
+        protected SubscriptionRepositoryInterface $subscriptionRepository,
+        protected SubscriptionManagement          $subscriptionManagement,
+        protected Validator                       $formKeyValidator,
+        protected ManagerInterface                $messageManager,
+        protected RedirectFactory                 $redirectFactory,
+        protected RequestInterface                $request,
+        protected Json                            $json,
+        protected FrequencyProvider               $frequencyProvider
+    ) {
+    }
+
+    public function execute()
+    {
+        $redirect = $this->redirectFactory->create();
+
+        if (!$this->customerSession->isLoggedIn()) {
+            return $redirect->setPath('customer/account/login');
+        }
+
+        if (!$this->formKeyValidator->validate($this->request)) {
+            $this->messageManager->addErrorMessage(
+                __('Invalid form key. Please try again.')
+            );
+            return $redirect->setPath('coffeeclub/subscription/index');
+        }
+
+        $subscriptionId = (int) $this->request->getParam('subscription_id');
+        $customerId = (int) $this->customerSession->getCustomerId();
+
+        try {
+            $subscription = $this->subscriptionRepository->getById($subscriptionId);
+
+            if ($subscription->getCustomerId() !== $customerId) {
+                throw new LocalizedException(
+                    __('You do not have permission to manage this subscription.')
+                );
+            }
+
+            $frequency = (string) $this->request->getParam('frequency');
+            $quantity = (int) $this->request->getParam('quantity', 1);
+            $addressData = $this->request->getParam('delivery_address');
+
+            if ($frequency !== '' && $this->frequencyProvider->isValid($frequency)) {
+                $subscription->setFrequency($frequency);
+            }
+
+            if ($quantity > 0) {
+                $subscription->setQuantity($quantity);
+            }
+
+            if (is_array($addressData) && !empty($addressData)) {
+                // Merge the submitted fields into the existing address so that
+                // country_id, region_id, firstname and lastname are preserved
+                // (the edit form only sends street, city, postcode, telephone).
+                $existing = json_decode((string) $subscription->getDeliveryAddress(), true);
+                if (!is_array($existing)) {
+                    $existing = [];
+                }
+                $mergedAddress = array_replace($existing, $addressData);
+
+                $this->assertDeliveryAddressIsComplete($mergedAddress);
+
+                $subscription->setDeliveryAddress($this->json->serialize($mergedAddress));
+            }
+
+            $this->subscriptionRepository->save($subscription);
+
+            $this->messageManager->addSuccessMessage(
+                __('Subscription updated successfully.')
+            );
+        } catch (Throwable $exception) {
+            $this->messageManager->addErrorMessage($exception->getMessage());
+        }
+
+        return $redirect->setPath('coffeeclub/subscription/index');
+    }
+
+    /**
+     * Ensure every field Magento needs for a quote is present.
+     *
+     * @param array $addressData
+     * @throws LocalizedException
+     */
+    private function assertDeliveryAddressIsComplete(array $addressData): void
+    {
+        $missing = [];
+
+        $streetLine = '';
+        $street = $addressData['street'] ?? [];
+        if (is_array($street)) {
+            $streetLine = trim((string) ($street[0] ?? ''));
+        } else {
+            $streetLine = trim((string) $street);
+        }
+        if ($streetLine === '') {
+            $missing[] = __('Street Address');
+        }
+
+        if (trim((string) ($addressData['city'] ?? '')) === '') {
+            $missing[] = __('City');
+        }
+
+        if (trim((string) ($addressData['postcode'] ?? '')) === '') {
+            $missing[] = __('Postcode');
+        }
+
+        if (trim((string) ($addressData['telephone'] ?? '')) === '') {
+            $missing[] = __('Telephone');
+        }
+
+        if (empty($missing)) {
+            return;
+        }
+
+        $labels = array_map(
+            static fn ($phrase) => (string) $phrase,
+            $missing
+        );
+
+        throw new LocalizedException(
+            __(
+                'Please fill all required delivery data. The following field(s) are missing: %1.',
+                implode(', ', $labels)
+            )
+        );
+    }
+}
+</file>
+
+<file path="Controller/Subscription/View.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Controller\Subscription;
+
+use Magento\Framework\App\Action\HttpGetActionInterface;
+use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Framework\View\Result\PageFactory;
+use Magento\Framework\Controller\Result\RedirectFactory;
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Message\ManagerInterface;
+use Codilar\CoffeeClub\Api\SubscriptionRepositoryInterface;
+
+class View implements HttpGetActionInterface
+{
+    public function __construct(
+        protected CustomerSession $customerSession,
+        protected PageFactory $pageFactory,
+        protected RedirectFactory $redirectFactory,
+        protected RequestInterface $request,
+        protected ManagerInterface $messageManager,
+        protected SubscriptionRepositoryInterface $subscriptionRepository
+    ) {}
+
+    public function execute()
+    {
+        if (!$this->customerSession->isLoggedIn()) {
+            return $this->redirectFactory->create()->setPath('customer/account/login');
+        }
+
+        $subscriptionId = (int) $this->request->getParam('subscription_id');
+
+        try {
+            $subscription = $this->subscriptionRepository->getById($subscriptionId);
+            if ($subscription->getCustomerId() !== (int) $this->customerSession->getCustomerId()) {
+                throw new \Exception(__('You do not have permission.'));
+            }
+        } catch (\Exception $e) {
+            $this->messageManager->addErrorMessage(__('Subscription not found.'));
+            return $this->redirectFactory->create()->setPath('*/*/index');
+        }
+
+        $resultPage = $this->pageFactory->create();
+        $resultPage->getConfig()->getTitle()->set(__('Manage Subscription #%1', $subscriptionId));
+        return $resultPage;
+    }
+}
+</file>
+
+<file path="Cron/ProcessSubscriptions.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Cron;
+
+use Codilar\CoffeeClub\Model\Subscription\Fulfilment;
+use Psr\Log\LoggerInterface;
+
+class ProcessSubscriptions
+{
+    public function __construct(
+        protected Fulfilment $fulfilment,
+        protected LoggerInterface $logger
+    ) {
+    }
+
+    /**
+     * Entry point for the cron job
+     *
+     * @return void
+     */
+    public function execute(): void
+    {
+        $this->logger->info('CoffeeClub: Starting subscription processing.');
+        $processed = $this->fulfilment->processDueSubscriptions();
+        $this->logger->info(sprintf('CoffeeClub: Finished. Processed %d subscriptions.', $processed));
+    }
+}
+</file>
+
+<file path="etc/adminhtml/system.xml">
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <tab id="codilar" translate="label" sortOrder="200">
+            <label>Codilar</label>
+        </tab>
+        <section id="coffeeclub" translate="label" type="text" sortOrder="10"
+                 showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Coffee Club</label>
+            <tab>codilar</tab>
+            <resource>Codilar_CoffeeClub::config</resource>
+            <group id="general" translate="label" type="text" sortOrder="10"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>General Settings</label>
+
+                <field id="enabled" translate="label" type="select" sortOrder="10"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Coffee Club Subscriptions</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+
+                <field id="allowed_categories" translate="label comment" type="multiselect"
+                       sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Allowed Categories</label>
+                    <comment>Select categories that can be purchased as subscriptions.</comment>
+                    <source_model>Codilar\CoffeeClub\Model\Config\Source\CategoryList</source_model>
+                </field>
+
+                <field id="allowed_product_types" translate="label comment" type="multiselect"
+                       sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Allowed Product Types</label>
+                    <comment>Select product types eligible for subscriptions.</comment>
+                    <source_model>Codilar\CoffeeClub\Model\Config\Source\ProductType</source_model>
+                </field>
+
+                <field id="failure_threshold" translate="label comment" type="text"
+                       sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Consecutive Failure Threshold</label>
+                    <comment>Number of consecutive failures before pausing a subscription.</comment>
+                    <validate>validate-number validate-greater-than-zero</validate>
+                </field>
+
+                <field id="frequencies" translate="label comment" type="text"
+                       sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Available Frequencies</label>
+                    <comment><![CDATA[
+                        Add one row per delivery frequency.<br/>
+                        <strong>Code</strong> - internal identifier stored on the subscription (e.g. weekly).<br/>
+                        <strong>Label</strong> - what the customer sees (e.g. Weekly).<br/>
+                        <strong>Date Modifier</strong> - a PHP strtotime-style relative modifier
+                        (e.g. +7 days, +14 days, +1 month, +3 months, +1 year).
+                    ]]></comment>
+                    <frontend_model>Codilar\CoffeeClub\Block\Adminhtml\System\Config\Form\Field\FrequencyArray</frontend_model>
+                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                </field>
+
+                <field id="shipping_method" translate="label comment" type="text"
+                       sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Shipping Method Code</label>
+                    <comment>e.g. flatrate_flatrate, freeshipping_freeshipping</comment>
+                </field>
+
+                <field id="payment_method" translate="label comment" type="text"
+                       sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Payment Method Code</label>
+                    <comment>e.g. checkmo, cashondelivery</comment>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>
+</file>
+
+<file path="etc/frontend/routes.xml">
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:App/etc/routes.xsd">
+    <router id="standard">
+        <route id="coffeeclub" frontName="coffeeclub">
+            <module name="Codilar_CoffeeClub" />
+        </route>
+    </router>
+</config>
+</file>
+
+<file path="etc/config.xml">
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <coffeeclub>
+            <general>
+                <enabled>1</enabled>
+                <allowed_categories></allowed_categories>
+                <allowed_product_types>simple,configurable</allowed_product_types>
+                <failure_threshold>3</failure_threshold>
+                <frequencies><![CDATA[[
+                    {"code":"weekly","label":"Weekly","modifier":"+7 days"},
+                    {"code":"fortnightly","label":"Fortnightly","modifier":"+14 days"},
+                    {"code":"monthly","label":"Monthly","modifier":"+1 month"},
+                    {"code":"quarterly","label":"Quarterly","modifier":"+3 months"},
+                    {"code":"yearly","label":"Yearly","modifier":"+1 year"}
+                ]]]></frequencies>
+                <shipping_method>flatrate_flatrate</shipping_method>
+                <payment_method>checkmo</payment_method>
+            </general>
+        </coffeeclub>
+    </default>
+</config>
+</file>
+
+<file path="etc/cron_groups.xml">
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/cron_groups.xsd">
+    <group id="coffeeclub">
+        <schedule_generate_every>1</schedule_generate_every>
+        <schedule_ahead_for>5</schedule_ahead_for>
+        <schedule_lifetime>2</schedule_lifetime>
+        <history_cleanup_every>10</history_cleanup_every>
+        <history_success_lifetime>60</history_success_lifetime>
+        <history_failure_lifetime>600</history_failure_lifetime>
+        <use_separate_process>1</use_separate_process>
+    </group>
+</config>
+</file>
+
+<file path="etc/crontab.xml">
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
+    <group id="coffeeclub">
+        <job name="codilar_coffeeclub_process_subscriptions"
+             instance="Codilar\CoffeeClub\Cron\ProcessSubscriptions"
+             method="execute">
+            <schedule>*/5 * * * *</schedule>
+        </job>
+    </group>
+</config>
+</file>
+
+<file path="etc/db_schema.xml">
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+
+    <table name="codilar_coffeeclub_subscription" resource="default" engine="innodb"
+           comment="Coffee Club subscription records">
+        <column xsi:type="int" name="subscription_id" padding="10" unsigned="true" nullable="false"
+                identity="true" comment="Subscription ID"/>
+        <column xsi:type="int" name="customer_id" padding="10" unsigned="true" nullable="false"
+                comment="Customer ID"/>
+        <column xsi:type="int" name="product_id" padding="10" unsigned="true" nullable="false"
+                comment="Actual product ID (simple child for configurable)"/>
+        <column xsi:type="int" name="parent_product_id" padding="10" unsigned="true" nullable="true"
+                comment="Parent configurable product ID (null for simple)"/>
+        <column xsi:type="int" name="quantity" padding="10" unsigned="true" nullable="false"
+                default="1" comment="Quantity per delivery"/>
+        <column xsi:type="decimal" name="agreed_price" precision="12" scale="4" nullable="false"
+                comment="Price locked at subscription creation"/>
+        <column xsi:type="varchar" name="frequency" length="32" nullable="false"
+                comment="fortnightly or monthly"/>
+        <column xsi:type="text" name="delivery_address" nullable="false"
+                comment="Serialised delivery address"/>
+        <column xsi:type="varchar" name="status" length="32" nullable="false" default="active"
+                comment="active, paused, cancelled"/>
+        <column xsi:type="date" name="next_due_date" nullable="true" comment="Next due date"/>
+        <column xsi:type="date" name="last_run_date" nullable="true" comment="Last processed date"/>
+        <column xsi:type="int" name="consecutive_failure_count" padding="10" unsigned="true"
+                nullable="false" default="0" comment="Consecutive failures"/>
+        <column xsi:type="timestamp" name="created_at" nullable="false" default="CURRENT_TIMESTAMP"
+                comment="Created at"/>
+        <column xsi:type="timestamp" name="updated_at" nullable="false"
+                default="CURRENT_TIMESTAMP" on_update="true" comment="Updated at"/>
+
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="subscription_id"/>
+        </constraint>
+
+        <!-- Shortened FK name: was CODILAR_COFFEECLUB_SUB_CUSTOMER_ID_CUSTOMER_ENTITY_ENTITY_ID -->
+        <constraint xsi:type="foreign" referenceId="CC_SUB_CUSTOMER_FK"
+                    table="codilar_coffeeclub_subscription" column="customer_id"
+                    referenceTable="customer_entity" referenceColumn="entity_id"
+                    onDelete="CASCADE"/>
+
+        <!-- Shortened FK name: was CODILAR_COFFEECLUB_SUB_PRODUCT_ID_CATALOG_PRODUCT_ENTITY_ENTITY_ID -->
+        <constraint xsi:type="foreign" referenceId="CC_SUB_PRODUCT_FK"
+                    table="codilar_coffeeclub_subscription" column="product_id"
+                    referenceTable="catalog_product_entity" referenceColumn="entity_id"
+                    onDelete="CASCADE"/>
+
+        <index referenceId="CC_SUB_CUSTOMER_ID" indexType="btree">
+            <column name="customer_id"/>
+        </index>
+        <index referenceId="CC_SUB_STATUS_NEXT_DUE_DATE" indexType="btree">
+            <column name="status"/>
+            <column name="next_due_date"/>
+        </index>
+        <index referenceId="CC_SUB_PRODUCT_ID" indexType="btree">
+            <column name="product_id"/>
+        </index>
+        <index referenceId="CC_SUB_PARENT_PRODUCT_ID" indexType="btree">
+            <column name="parent_product_id"/>
+        </index>
+    </table>
+
+    <table name="codilar_coffeeclub_run_log" resource="default" engine="innodb"
+           comment="Coffee Club scheduled run audit log">
+        <column xsi:type="int" name="log_id" padding="10" unsigned="true" nullable="false"
+                identity="true" comment="Log ID"/>
+        <column xsi:type="int" name="subscription_id" padding="10" unsigned="true" nullable="false"
+                comment="Subscription ID"/>
+        <column xsi:type="datetime" name="run_date" nullable="false" comment="Run date and time"/>
+        <column xsi:type="varchar" name="outcome" length="32" nullable="false"
+                comment="success, failure, skipped"/>
+        <column xsi:type="int" name="order_id" padding="10" unsigned="true" nullable="true"
+                comment="Generated order ID"/>
+        <column xsi:type="text" name="failure_reason" nullable="true" comment="Failure reason"/>
+
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="log_id"/>
+        </constraint>
+
+        <!-- Shortened FK name -->
+        <constraint xsi:type="foreign" referenceId="CC_RUNLOG_SUB_FK"
+                    table="codilar_coffeeclub_run_log" column="subscription_id"
+                    referenceTable="codilar_coffeeclub_subscription" referenceColumn="subscription_id"
+                    onDelete="CASCADE"/>
+
+        <index referenceId="CC_RUNLOG_SUB_ID" indexType="btree">
+            <column name="subscription_id"/>
+        </index>
+        <index referenceId="CC_RUNLOG_RUN_DATE" indexType="btree">
+            <column name="run_date"/>
+        </index>
+    </table>
+</schema>
+</file>
+
+<file path="etc/di.xml">
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+
+    <preference for="Codilar\CoffeeClub\Api\SubscriptionRepositoryInterface"
+                type="Codilar\CoffeeClub\Model\SubscriptionRepository"/>
+
+    <preference for="Codilar\CoffeeClub\Api\Data\SubscriptionInterface"
+                type="Codilar\CoffeeClub\Model\Subscription"/>
+
+    <preference for="Codilar\CoffeeClub\Api\RunLogRepositoryInterface"
+                type="Codilar\CoffeeClub\Model\RunLogRepository"/>
+
+    <preference for="Codilar\CoffeeClub\Api\Data\RunLogInterface"
+                type="Codilar\CoffeeClub\Model\RunLog"/>
+
+    <type name="Codilar\CoffeeClub\Model\SubscriptionRepository">
+        <arguments>
+            <argument name="collectionProcessor" xsi:type="object">
+                Magento\Framework\Api\SearchCriteria\CollectionProcessor
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Codilar\CoffeeClub\Model\RunLogRepository">
+        <arguments>
+            <argument name="collectionProcessor" xsi:type="object">
+                Magento\Framework\Api\SearchCriteria\CollectionProcessor
+            </argument>
+        </arguments>
+    </type>
+
+</config>
+</file>
+
+<file path="etc/email_templates.xml">
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Email:etc/email_templates.xsd">
+
+    <template id="codilar_coffeeclub_subscription_started"
+              label="Coffee Club: Subscription Started"
+              file="subscription_started.html"
+              type="html"
+              module="Codilar_CoffeeClub"
+              area="frontend"/>
+
+    <template id="codilar_coffeeclub_subscription_paused"
+              label="Coffee Club: Subscription Paused"
+              file="subscription_paused.html"
+              type="html"
+              module="Codilar_CoffeeClub"
+              area="frontend"/>
+
+    <template id="codilar_coffeeclub_subscription_resumed"
+              label="Coffee Club: Subscription Resumed"
+              file="subscription_resumed.html"
+              type="html"
+              module="Codilar_CoffeeClub"
+              area="frontend"/>
+
+    <template id="codilar_coffeeclub_subscription_skipped"
+              label="Coffee Club: Next Delivery Skipped"
+              file="subscription_skipped.html"
+              type="html"
+              module="Codilar_CoffeeClub"
+              area="frontend"/>
+
+    <template id="codilar_coffeeclub_subscription_cancelled"
+              label="Coffee Club: Subscription Cancelled"
+              file="subscription_cancelled.html"
+              type="html"
+              module="Codilar_CoffeeClub"
+              area="frontend"/>
+
+    <template id="codilar_coffeeclub_subscription_order_success"
+              label="Coffee Club: Subscription Order Success"
+              file="subscription_order_success.html"
+              type="html"
+              module="Codilar_CoffeeClub"
+              area="frontend"/>
+
+    <template id="codilar_coffeeclub_subscription_order_failure"
+              label="Coffee Club: Subscription Order Failure"
+              file="subscription_order_failure.html"
+              type="html"
+              module="Codilar_CoffeeClub"
+              area="frontend"/>
+
+    <template id="codilar_coffeeclub_subscription_consecutive_failures"
+              label="Coffee Club: Subscription Consecutive Failures"
+              file="subscription_consecutive_failures.html"
+              type="html"
+              module="Codilar_CoffeeClub"
+              area="frontend"/>
+
+</config>
+</file>
+
+<file path="etc/module.xml">
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
+    <module name="Codilar_CoffeeClub">
+        <sequence>
+            <module name="Magento_Catalog"/>
+            <module name="Magento_ConfigurableProduct"/>
+            <module name="Magento_Customer"/>
+            <module name="Magento_Downloadable"/>
+            <module name="Magento_Sales"/>
+            <module name="Magento_Cron"/>
+        </sequence>
+    </module>
+</config>
+</file>
+
+<file path="Model/Config/Source/CategoryList.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Model\Config\Source;
+
+use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory;
+use Magento\Framework\Data\OptionSourceInterface;
+use Magento\Store\Model\StoreManagerInterface;
+use Psr\Log\LoggerInterface;
+
+class CategoryList implements OptionSourceInterface
+{
+    /**
+     * Character used to indent child categories inside the dropdown.
+     * Using non-breaking spaces so they render correctly in HTML.
+     */
+    private const INDENT = "\u{00A0}\u{00A0}\u{00A0}";
+
+    /**
+     * @param CollectionFactory $categoryCollectionFactory
+     * @param StoreManagerInterface $storeManager
+     * @param LoggerInterface $logger
+     */
+    public function __construct(
+        protected CollectionFactory     $categoryCollectionFactory,
+        protected StoreManagerInterface $storeManager,
+        protected LoggerInterface       $logger
+    )
+    {
+    }
+
+    /**
+     * Build a hierarchical option list for the admin multiselect.
+     *
+     * @return array
+     */
+    public function toOptionArray(): array
+    {
+        $store = $this->storeManager->getDefaultStoreView();
+        $storeId = (int)$store->getId();
+        $rootCategoryId = (int)$store->getRootCategoryId();
+
+        $this->logger->info(sprintf(
+            'CoffeeClub DEBUG [CategoryList]: storeId=%d, rootCategoryId=%d',
+            $storeId,
+            $rootCategoryId
+        ));
+
+        // Load all ACTIVE categories that live under the store's root category.
+        $collection = $this->categoryCollectionFactory->create();
+        $collection
+            ->setStoreId($storeId)
+            ->addAttributeToSelect(['name', 'parent_id'])
+            ->addIsActiveFilter()
+            ->addPathFilter('^1/' . $rootCategoryId . '/')
+            ->setOrder('position', 'ASC');
+
+        $categoriesById = [];
+        $childrenByParent = [];
+
+        foreach ($collection as $category) {
+            $id = (int)$category->getId();
+            $parentId = (int)$category->getParentId();
+
+            $categoriesById[$id] = $category;
+            $childrenByParent[$parentId][] = $id;
+        }
+
+        $this->logger->info(sprintf(
+            'CoffeeClub DEBUG [CategoryList]: loaded %d categories.',
+            count($categoriesById)
+        ));
+
+        $options = [];
+        $this->buildOptions(
+            $rootCategoryId,
+            $childrenByParent,
+            $categoriesById,
+            $options,
+            0
+        );
+
+        return $options;
+    }
+
+    /**
+     * Recursively flatten the category tree with indentation.
+     *
+     * @param int $parentId
+     * @param array $childrenByParent
+     * @param array $categoriesById
+     * @param array $options
+     * @param int $level
+     * @return void
+     */
+    private function buildOptions(
+        int   $parentId,
+        array $childrenByParent,
+        array $categoriesById,
+        array &$options,
+        int   $level
+    ): void
+    {
+        if (empty($childrenByParent[$parentId])) {
+            return;
+        }
+
+        foreach ($childrenByParent[$parentId] as $childId) {
+            $category = $categoriesById[$childId] ?? null;
+            if (!$category) {
+                continue;
+            }
+
+            $indent = str_repeat(self::INDENT, $level);
+            $name = (string)$category->getName();
+
+            $options[] = [
+                'value' => (int)$childId,
+                'label' => $indent . $name . ' (ID: ' . $childId . ')',
+            ];
+
+            $this->buildOptions(
+                $childId,
+                $childrenByParent,
+                $categoriesById,
+                $options,
+                $level + 1
+            );
+        }
+    }
+}
+</file>
+
+<file path="Model/Config/Source/ProductType.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Model\Config\Source;
+
+use Magento\Catalog\Model\Product\Type;
+use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
+use Magento\Downloadable\Model\Product\Type as DownloadableType;
+use Magento\Framework\Data\OptionSourceInterface;
+
+class ProductType implements OptionSourceInterface
+{
+    /**
+     * Return product type options for the admin multiselect field.
+     *
+     * @return array
+     */
+    public function toOptionArray(): array
+    {
+        return [
+            [
+                'value' => Type::TYPE_SIMPLE,
+                'label' => __('Simple Product'),
+            ],
+            [
+                'value' => Configurable::TYPE_CODE,
+                'label' => __('Configurable Product'),
+            ],
+            [
+                'value' => Type::TYPE_VIRTUAL,
+                'label' => __('Virtual Product'),
+            ],
+            [
+                'value' => Type::TYPE_BUNDLE,
+                'label' => __('Bundle Product'),
+            ],
+            [
+                'value' => DownloadableType::TYPE_DOWNLOADABLE,
+                'label' => __('Downloadable Product'),
+            ],
+        ];
+    }
+}
+</file>
+
+<file path="Model/Config/FrequencyProvider.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Model\Config;
+
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Store\Model\ScopeInterface;
+use Psr\Log\LoggerInterface;
+
+class FrequencyProvider
+{
+    public const CONFIG_PATH = 'coffeeclub/general/frequencies';
+
+    /**
+     * @var array<string, array{label: string, modifier: string}>|null
+     */
+    private ?array $cache = null;
+
+    public function __construct(
+        protected ScopeConfigInterface $scopeConfig,
+        protected LoggerInterface      $logger
+    )
+    {
+    }
+
+    /**
+     * Return all configured frequencies keyed by code.
+     *
+     * @return array<string, array{label: string, modifier: string}>
+     */
+    public function getAll(): array
+    {
+        if ($this->cache !== null) {
+            return $this->cache;
+        }
+
+        $raw = $this->scopeConfig->getValue(
+            self::CONFIG_PATH,
+            ScopeInterface::SCOPE_STORE
+        );
+        $rows = $this->decodeRows($raw);
+
+        $map = [];
+
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $code = trim((string)($row['code'] ?? ''));
+            $label = trim((string)($row['label'] ?? ''));
+            $modifier = trim((string)($row['modifier'] ?? ''));
+
+            if ($code === '' || $modifier === '') {
+                $this->logger->warning(sprintf(
+                    'CoffeeClub: skipping frequency row with empty code/modifier: %s',
+                    json_encode($row)
+                ));
+                continue;
+            }
+
+            $map[$code] = [
+                'label' => $label !== '' ? $label : $code,
+                'modifier' => $modifier,
+            ];
+        }
+
+        return $this->cache = $map;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getCodes(): array
+    {
+        return array_keys($this->getAll());
+    }
+
+    public function isValid(string $code): bool
+    {
+        return isset($this->getAll()[$code]);
+    }
+
+    public function getLabel(string $code): string
+    {
+        return $this->getAll()[$code]['label'] ?? $code;
+    }
+
+    /**
+     * @throws \DateMalformedStringException
+     */
+    public function calculateNextDate(string $code, ?string $fromDate = null): string
+    {
+        $map = $this->getAll();
+        if (!isset($map[$code])) {
+            throw new \InvalidArgumentException(
+                sprintf('Unknown frequency code "%s".', $code)
+            );
+        }
+
+        $base = $fromDate !== null
+            ? new \DateTime($fromDate)
+            : new \DateTime();
+
+        try {
+            $base->modify($map[$code]['modifier']);
+        } catch (\Exception $exception) {
+            throw new \InvalidArgumentException(
+                sprintf(
+                    'Invalid date modifier "%s" for frequency "%s".',
+                    $map[$code]['modifier'],
+                    $code
+                ),
+                0,
+                $exception
+            );
+        }
+
+        return $base->format('Y-m-d');
+    }
+
+    /**
+     * Decode the raw config value into an array of rows.
+     *
+     * Handles:
+     *   1. Array (already decoded)
+     *   2. JSON  — new format written by ArraySerialized backend model
+     *   3. PHP-serialized array — fallback
+     *   4. Legacy plain-text "code:Label:+N unit" (one per line)
+     *
+     * @param mixed $raw
+     * @return array<int, array<string, string>>
+     */
+    private function decodeRows($raw): array
+    {
+        if (is_array($raw)) {
+            return $raw;
+        }
+
+        if (!is_string($raw) || $raw === '') {
+            return [];
+        }
+
+        // 1. JSON
+        $decoded = json_decode($raw, true);
+        if (is_array($decoded)) {
+            return $decoded;
+        }
+
+        // 2. PHP serialized
+        if (preg_match('/^a:\d+:{/', $raw)) {
+            $unserialized = @unserialize($raw, ['allowed_classes' => false]);
+            if (is_array($unserialized)) {
+                return $unserialized;
+            }
+        }
+
+        // 3. Legacy text format
+        if (strpos($raw, ':') !== false) {
+            $rows = [];
+            $lines = preg_split('/\r\n|\r|\n/', $raw) ?: [];
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if ($line === '') {
+                    continue;
+                }
+                $parts = array_map('trim', explode(':', $line, 3));
+                if (count($parts) !== 3) {
+                    continue;
+                }
+                [$code, $label, $modifier] = $parts;
+                if ($code === '' || $modifier === '') {
+                    continue;
+                }
+                $rows[] = [
+                    'code' => $code,
+                    'label' => $label,
+                    'modifier' => $modifier,
+                ];
+            }
+            if (!empty($rows)) {
+                return $rows;
+            }
+        }
+
+        return [];
+    }
+}
+</file>
+
+<file path="Model/ResourceModel/RunLog/Collection.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Model\ResourceModel\RunLog;
+
+use Codilar\CoffeeClub\Model\ResourceModel\RunLog as RunLogResource;
+use Codilar\CoffeeClub\Model\RunLog;
+use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
+
+class Collection extends AbstractCollection
+{
+    /**
+     * @return void
+     */
+    protected function _construct(): void
+    {
+        $this->_init(RunLog::class, RunLogResource::class);
+    }
+}
+</file>
+
+<file path="Model/ResourceModel/Subscription/Collection.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Model\ResourceModel\Subscription;
+
+use Codilar\CoffeeClub\Model\ResourceModel\Subscription as SubscriptionResource;
+use Codilar\CoffeeClub\Model\Subscription;
+use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
+
+class Collection extends AbstractCollection
+{
+    protected function _construct(): void
+    {
+        $this->_init(Subscription::class, SubscriptionResource::class);
+    }
+}
+</file>
+
+<file path="Model/ResourceModel/RunLog.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Model\ResourceModel;
+
+use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
+
+class RunLog extends AbstractDb
+{
+    protected function _construct(): void
+    {
+        $this->_init('codilar_coffeeclub_run_log', 'log_id');
+    }
+}
+</file>
+
+<file path="Model/ResourceModel/Subscription.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Model\ResourceModel;
+
+use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
+
+class Subscription extends AbstractDb
+{
+    protected function _construct(): void
+    {
+        $this->_init('codilar_coffeeclub_subscription', 'subscription_id');
+    }
+}
+</file>
+
+<file path="Model/Subscription/EmailNotifier.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Model\Subscription;
+
+use Codilar\CoffeeClub\Api\Data\SubscriptionInterface;
+use Codilar\CoffeeClub\Model\Config\FrequencyProvider;
+use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\Customer\Api\CustomerRepositoryInterface;
+use Magento\Framework\App\Area;
+use Magento\Framework\Mail\Template\TransportBuilder;
+use Magento\Sales\Api\Data\OrderInterface;
+use Psr\Log\LoggerInterface;
+use Throwable;
+
+/**
+ * Central email notification service for Coffee Club subscriptions.
+ *
+ * Every transactional email the module sends goes through this class.
+ * Each public method corresponds to one business event.
+ *
+ * IMPORTANT:
+ *  - This class never throws. A failed email must never break a business action.
+ *  - All failures are logged via LoggerInterface for later inspection.
+ *  - Actual SMTP transport is provided by the configured SMTP module
+ *    (e.g. Mageplaza SMTP). This class only builds the message.
+ */
+class EmailNotifier
+{
+    /**
+     * Template identifiers.
+     * These MUST match the "id" attribute in etc/email_templates.xml.
+     */
+    public const TEMPLATE_STARTED              = 'codilar_coffeeclub_subscription_started';
+    public const TEMPLATE_PAUSED               = 'codilar_coffeeclub_subscription_paused';
+    public const TEMPLATE_RESUMED              = 'codilar_coffeeclub_subscription_resumed';
+    public const TEMPLATE_SKIPPED              = 'codilar_coffeeclub_subscription_skipped';
+    public const TEMPLATE_CANCELLED            = 'codilar_coffeeclub_subscription_cancelled';
+    public const TEMPLATE_ORDER_SUCCESS        = 'codilar_coffeeclub_subscription_order_success';
+    public const TEMPLATE_ORDER_FAILURE        = 'codilar_coffeeclub_subscription_order_failure';
+    public const TEMPLATE_CONSECUTIVE_FAILURES = 'codilar_coffeeclub_subscription_consecutive_failures';
+
+    /**
+     * Sender identity scope.
+     *
+     * 'general' maps to:
+     *   Stores > Configuration > General > Store Email Addresses > General Contact.
+     *
+     * The actual SMTP credentials come from Mageplaza SMTP; this only sets
+     * the "From" header and lets Magento resolve the sender at the correct store scope.
+     */
+    private const SENDER_SCOPE = 'general';
+
+    public function __construct(
+        protected TransportBuilder            $transportBuilder,
+        protected CustomerRepositoryInterface $customerRepository,
+        protected ProductRepositoryInterface  $productRepository,
+        protected FrequencyProvider           $frequencyProvider,
+        protected LoggerInterface             $logger
+    ) {
+    }
+
+    /**
+     * Send the "subscription started" email.
+     */
+    public function notifyStarted(SubscriptionInterface $subscription): void
+    {
+        $this->send(self::TEMPLATE_STARTED, $subscription, [
+            'next_delivery_date' => (string) ($subscription->getNextDueDate() ?? ''),
+        ]);
+    }
+
+    /**
+     * Send the "subscription paused" email.
+     *
+     * Used for:
+     *   - Customer-initiated pause (reason defaults to "Paused at your request.")
+     *   - System pause when the product is no longer available
+     *
+     * NOT used for consecutive failure threshold — that has its own dedicated email.
+     */
+    public function notifyPaused(SubscriptionInterface $subscription, string $reason = ''): void
+    {
+        $this->send(self::TEMPLATE_PAUSED, $subscription, [
+            'reason' => $reason !== '' ? $reason : 'Paused at your request.',
+        ]);
+    }
+
+    /**
+     * Send the "subscription resumed" email.
+     */
+    public function notifyResumed(SubscriptionInterface $subscription): void
+    {
+        $this->send(self::TEMPLATE_RESUMED, $subscription, [
+            'next_delivery_date' => (string) ($subscription->getNextDueDate() ?? ''),
+        ]);
+    }
+
+    /**
+     * Send the "next delivery skipped" email.
+     *
+     * @param string|null $skippedDate The date that was skipped (Y-m-d).
+     */
+    public function notifySkipped(SubscriptionInterface $subscription, ?string $skippedDate = null): void
+    {
+        $this->send(self::TEMPLATE_SKIPPED, $subscription, [
+            'skipped_date'       => (string) ($skippedDate ?? ''),
+            'next_delivery_date' => (string) ($subscription->getNextDueDate() ?? ''),
+        ]);
+    }
+
+    /**
+     * Send the "subscription cancelled" email.
+     */
+    public function notifyCancelled(SubscriptionInterface $subscription): void
+    {
+        $this->send(self::TEMPLATE_CANCELLED, $subscription, []);
+    }
+
+    /**
+     * Send the "subscription order succeeded" email.
+     */
+    public function notifyOrderSuccess(SubscriptionInterface $subscription, OrderInterface $order): void
+    {
+        $this->send(self::TEMPLATE_ORDER_SUCCESS, $subscription, [
+            'order_increment_id' => (string) $order->getIncrementId(),
+            'order_total'        => number_format((float) $order->getBaseGrandTotal(), 2, '.', ''),
+            'next_delivery_date' => (string) ($subscription->getNextDueDate() ?? ''),
+        ]);
+    }
+
+    /**
+     * Send the "subscription order failed" email (single failure).
+     */
+    public function notifyOrderFailure(SubscriptionInterface $subscription, string $reason): void
+    {
+        $this->send(self::TEMPLATE_ORDER_FAILURE, $subscription, [
+            'failure_reason' => $reason,
+            'failure_count'  => (int) $subscription->getConsecutiveFailureCount(),
+        ]);
+    }
+
+    /**
+     * Send the dedicated "consecutive failures threshold reached" email.
+     *
+     * This is separate from notifyPaused() on purpose: it informs the customer
+     * that repeated failures caused the subscription to be paused.
+     */
+    public function notifyConsecutiveFailures(
+        SubscriptionInterface $subscription,
+        int                   $failureCount,
+        string                $reason
+    ): void {
+        $this->send(self::TEMPLATE_CONSECUTIVE_FAILURES, $subscription, [
+            'failure_count'  => $failureCount,
+            'failure_reason' => $reason,
+        ]);
+    }
+
+    /**
+     * Internal helper: build and send one email.
+     *
+     * @param string                $templateId   Template ID registered in email_templates.xml.
+     * @param SubscriptionInterface $subscription Used to load the customer and dynamic data.
+     * @param array<string, mixed>  $vars         Extra template variables for this specific email.
+     */
+    private function send(string $templateId, SubscriptionInterface $subscription, array $vars): void
+    {
+        // 1. Load the customer. If this fails, we cannot determine recipient/store — log and return.
+        try {
+            $customer = $this->customerRepository->getById($subscription->getCustomerId());
+        } catch (Throwable $exception) {
+            $this->logger->error(sprintf(
+                'CoffeeClub email [%s]: could not load customer #%d — %s',
+                $templateId,
+                (int) $subscription->getCustomerId(),
+                $exception->getMessage()
+            ));
+            return;
+        }
+
+        $storeId = (int) $customer->getStoreId();
+
+        // 2. Merge common variables (product name, frequency label, etc.) with event-specific ones.
+        $templateVars = array_merge($this->buildBaseVars($subscription, $customer), $vars);
+
+        // 3. Build the transport and send. Any failure is logged — never re-thrown.
+        try {
+            $transport = $this->transportBuilder
+                ->setTemplateIdentifier($templateId)
+                ->setTemplateOptions([
+                    'area'  => Area::AREA_FRONTEND,
+                    'store' => $storeId,
+                ])
+                ->setTemplateVars($templateVars)
+                ->setFromByScope(self::SENDER_SCOPE, $storeId)
+                ->addTo((string) $customer->getEmail(), (string) $customer->getFirstname())
+                ->getTransport();
+
+            $transport->sendMessage();
+
+            $this->logger->info(sprintf(
+                'CoffeeClub email [%s]: sent to %s (store %d).',
+                $templateId,
+                (string) $customer->getEmail(),
+                $storeId
+            ));
+        } catch (Throwable $exception) {
+            $this->logger->error(sprintf(
+                'CoffeeClub email [%s]: send failed for customer #%d — %s',
+                $templateId,
+                (int) $subscription->getCustomerId(),
+                $exception->getMessage()
+            ));
+        }
+    }
+
+    /**
+     * Build the variables every template can rely on.
+     *
+     * @param \Magento\Customer\Api\Data\CustomerInterface $customer
+     * @return array<string, mixed>
+     */
+    private function buildBaseVars(SubscriptionInterface $subscription, $customer): array
+    {
+        return [
+            'customer_name'   => (string) $customer->getFirstname(),
+            'subscription_id' => (int) $subscription->getSubscriptionId(),
+            'product_name'    => $this->resolveProductName($subscription),
+            'quantity'        => (int) $subscription->getQuantity(),
+            'frequency_label' => $this->frequencyProvider->getLabel((string) $subscription->getFrequency()),
+            'agreed_price'    => number_format((float) $subscription->getAgreedPrice(), 2, '.', ''),
+            'status'          => (string) $subscription->getStatus(),
+        ];
+    }
+
+    /**
+     * Resolve a human-readable product name.
+     * Falls back to "Product #ID" if the product was deleted, so the email
+     * still renders instead of failing.
+     */
+    private function resolveProductName(SubscriptionInterface $subscription): string
+    {
+        try {
+            $product = $this->productRepository->getById((int) $subscription->getProductId());
+            return (string) $product->getName();
+        } catch (Throwable $exception) {
+            return sprintf('Product #%d', (int) $subscription->getProductId());
+        }
+    }
+}
+</file>
+
+<file path="Model/Subscription/Fulfilment.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Model\Subscription;
+
+use Codilar\CoffeeClub\Api\Data\RunLogInterface;
+use Codilar\CoffeeClub\Api\Data\SubscriptionInterface;
+use Codilar\CoffeeClub\Api\RunLogRepositoryInterface;
+use Codilar\CoffeeClub\Api\SubscriptionRepositoryInterface;
+use Codilar\CoffeeClub\Model\Config\FrequencyProvider;
+use Codilar\CoffeeClub\Model\ResourceModel\Subscription\CollectionFactory;
+use Codilar\CoffeeClub\Model\RunLogFactory;
+use Magento\Catalog\Api\Data\ProductInterface;
+use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\Customer\Api\AddressRepositoryInterface;
+use Magento\Customer\Api\CustomerRepositoryInterface;
+use Magento\Customer\Api\Data\RegionInterface;
+use Magento\Directory\Model\ResourceModel\Region\CollectionFactory as RegionCollectionFactory;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Stdlib\DateTime\DateTime;
+use Magento\Quote\Model\QuoteFactory;
+use Magento\Quote\Model\QuoteManagement;
+use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Store\Model\ScopeInterface;
+use Magento\Store\Model\StoreManagerInterface;
+use Psr\Log\LoggerInterface;
+use Throwable;
+
+/**
+ * Cron-driven engine that fulfils due subscriptions by creating Magento orders.
+ *
+ * Emails are delegated to EmailNotifier — this class no longer builds any
+ * messages directly. This is the single place where "what happened during a run"
+ * is decided; EmailNotifier only cares about "how to send".
+ */
+class Fulfilment
+{
+    private const CONFIG_PATH_FAILURE_THRESHOLD = 'coffeeclub/general/failure_threshold';
+    private const CONFIG_PATH_SHIPPING_METHOD   = 'coffeeclub/general/shipping_method';
+    private const CONFIG_PATH_PAYMENT_METHOD    = 'coffeeclub/general/payment_method';
+
+    public function __construct(
+        protected CollectionFactory               $collectionFactory,
+        protected SubscriptionRepositoryInterface $subscriptionRepository,
+        protected RunLogRepositoryInterface       $runLogRepository,
+        protected RunLogFactory                   $runLogFactory,
+        protected ProductRepositoryInterface      $productRepository,
+        protected CustomerRepositoryInterface     $customerRepository,
+        protected AddressRepositoryInterface      $addressRepository,
+        protected RegionCollectionFactory         $regionCollectionFactory,
+        protected QuoteFactory                    $quoteFactory,
+        protected QuoteManagement                 $quoteManagement,
+        protected OrderRepositoryInterface        $orderRepository,
+        protected ScopeConfigInterface            $scopeConfig,
+        protected DateTime                        $dateTime,
+        protected LoggerInterface                 $logger,
+        protected StoreManagerInterface           $storeManager,
+        protected FrequencyProvider               $frequencyProvider,
+        protected EmailNotifier                   $emailNotifier
+    ) {
+    }
+
+    public function processDueSubscriptions(): int
+    {
+        $this->logger->info('CoffeeClub DEBUG: RUN START');
+
+        if (!$this->scopeConfig->isSetFlag(
+            'coffeeclub/general/enabled',
+            ScopeInterface::SCOPE_STORE
+        )) {
+            $this->logger->info('CoffeeClub DEBUG: Module disabled in configuration.');
+            return 0;
+        }
+
+        $today = $this->dateTime->gmtDate('Y-m-d');
+        $this->logger->info('CoffeeClub DEBUG: Today (GMT) = ' . $today);
+
+        $collection = $this->collectionFactory->create();
+        $collection->addFieldToFilter('status', SubscriptionInterface::STATUS_ACTIVE)
+            ->addFieldToFilter('next_due_date', ['lteq' => $today]);
+
+        $this->logger->info(
+            'CoffeeClub DEBUG: Found ' . $collection->getSize() . ' due subscription(s).'
+        );
+
+        $processed = 0;
+
+        foreach ($collection as $subscription) {
+            try {
+                $this->logger->info(sprintf(
+                    'CoffeeClub DEBUG: --- Processing subscription #%d ---',
+                    (int) $subscription->getSubscriptionId()
+                ));
+                $this->processSingleSubscription($subscription);
+                $processed++;
+            } catch (Throwable $exception) {
+                $this->logger->error(sprintf(
+                    'CoffeeClub DEBUG: FATAL for subscription #%d | %s | %s | %s:%d',
+                    (int) $subscription->getSubscriptionId(),
+                    get_class($exception),
+                    $exception->getMessage(),
+                    $exception->getFile(),
+                    $exception->getLine()
+                ));
+            }
+        }
+
+        $this->logger->info(sprintf(
+            'CoffeeClub DEBUG: ========== RUN END. Processed %d ==========',
+            $processed
+        ));
+
+        return $processed;
+    }
+
+    private function processSingleSubscription(SubscriptionInterface $subscription): void
+    {
+        $productId  = $subscription->getProductId();
+        $customerId = $subscription->getCustomerId();
+
+        try {
+            $product = $this->productRepository->getById($productId);
+        } catch (Throwable $exception) {
+            $this->logger->error('CoffeeClub DEBUG: Product load failed: ' . $exception->getMessage());
+            $this->pauseAndNotify($subscription, sprintf('Product %d could not be loaded.', $productId));
+            return;
+        }
+
+        $this->logger->info(sprintf(
+            'CoffeeClub DEBUG: Product loaded. SKU=%s | Type=%s | Salable=%s',
+            $product->getSku(),
+            $product->getTypeId(),
+            $product->isSalable() ? 'YES' : 'NO'
+        ));
+
+        if (!$product->isSalable() || (int) $product->getStatus() !== 1) {
+            $this->pauseAndNotify($subscription, 'Product is no longer available.');
+            return;
+        }
+
+        try {
+            $customer = $this->customerRepository->getById($customerId);
+        } catch (Throwable $exception) {
+            $this->saveRunLog(
+                $subscription,
+                RunLogInterface::OUTCOME_FAILURE,
+                null,
+                'Customer load failed: ' . $exception->getMessage()
+            );
+            return;
+        }
+
+        try {
+            $order = $this->createOrder($subscription, $product, $customer);
+
+            $this->logger->info(sprintf(
+                'CoffeeClub DEBUG: createOrder() SUCCESS. Order ID=%d | Increment ID=%s',
+                (int) $order->getEntityId(),
+                $order->getIncrementId()
+            ));
+
+            $subscription->setLastRunDate($this->dateTime->gmtDate('Y-m-d'));
+            $subscription->setNextDueDate(
+                $this->calculateNextDueDateFromNow($subscription->getFrequency())
+            );
+            $subscription->setConsecutiveFailureCount(0);
+            $saved = $this->subscriptionRepository->save($subscription);
+
+            $this->saveRunLog(
+                $saved,
+                RunLogInterface::OUTCOME_SUCCESS,
+                (int) $order->getEntityId(),
+                null
+            );
+
+            // Notify the customer that their subscription order was created.
+            $this->emailNotifier->notifyOrderSuccess($saved, $order);
+        } catch (Throwable $exception) {
+            $this->logger->error(sprintf(
+                'CoffeeClub DEBUG: createOrder() FAILED | %s | %s',
+                get_class($exception),
+                $exception->getMessage()
+            ));
+
+            $failureCount = $subscription->getConsecutiveFailureCount() + 1;
+            $subscription->setConsecutiveFailureCount($failureCount);
+
+            $thresholdReached = $failureCount >= $this->getFailureThreshold();
+
+            if ($thresholdReached) {
+                $subscription->setStatus(SubscriptionInterface::STATUS_PAUSED);
+            }
+
+            $saved = $this->subscriptionRepository->save($subscription);
+
+            $this->saveRunLog(
+                $saved,
+                RunLogInterface::OUTCOME_FAILURE,
+                null,
+                $exception->getMessage()
+            );
+
+            // Send exactly ONE email:
+            //  - If the failure threshold was reached, the dedicated "consecutive failures" email.
+            //  - Otherwise, the standard single-failure email.
+            if ($thresholdReached) {
+                $this->emailNotifier->notifyConsecutiveFailures(
+                    $saved,
+                    $failureCount,
+                    'Consecutive fulfilment attempts failed. Your subscription has been paused.'
+                );
+            } else {
+                $this->emailNotifier->notifyOrderFailure($saved, $exception->getMessage());
+            }
+        }
+    }
+
+    private function createOrder(
+        SubscriptionInterface                        $subscription,
+        ProductInterface                             $product,
+        \Magento\Customer\Api\Data\CustomerInterface $customer
+    ): OrderInterface {
+        $store = $this->storeManager->getStore((int) $customer->getStoreId());
+
+        $quote = $this->quoteFactory->create();
+        $quote->setStore($store);
+        $quote->setStoreId((int) $store->getId());
+        $quote->setCustomer($customer);
+        $quote->setCustomerIsGuest(false);
+        $quote->setCustomerEmail($customer->getEmail());
+
+        $quoteItem = $quote->addProduct($product, $subscription->getQuantity());
+        if (is_string($quoteItem)) {
+            throw new LocalizedException(__('addProduct failed: %1', $quoteItem));
+        }
+
+        $quoteItem->setCustomPrice($subscription->getAgreedPrice());
+        $quoteItem->setOriginalCustomPrice($subscription->getAgreedPrice());
+        $quoteItem->getProduct()->setIsSuperMode(true);
+
+        $addressData = $this->unserializeAddress($subscription->getDeliveryAddress());
+        $addressData = $this->resolveRegion($addressData, (int) $subscription->getCustomerId());
+
+        $quote->getBillingAddress()->addData($addressData);
+        $quote->getShippingAddress()->addData($addressData);
+
+        $quote->getShippingAddress()->setCollectShippingRates(true);
+        $quote->getShippingAddress()->collectShippingRates();
+
+        $rates = $quote->getShippingAddress()->getAllShippingRates();
+        $this->logger->info(sprintf(
+            'CoffeeClub DEBUG: Available shipping rates: %d',
+            count($rates)
+        ));
+
+        $quote->getShippingAddress()->setShippingMethod($this->getShippingMethod());
+
+        $payment = $quote->getPayment();
+        $payment->setQuote($quote);
+        $payment->setStore($store);
+        $payment->setStoreId((int) $store->getId());
+
+        $quote->setPaymentMethod($this->getPaymentMethod());
+        $quote->setInventoryProcessed(false);
+        $payment->importData(['method' => $this->getPaymentMethod()]);
+
+        $quote->collectTotals()->save();
+
+        $order = $this->quoteManagement->submit($quote);
+        if (!$order) {
+            throw new LocalizedException(__('Quote submit returned null.'));
+        }
+
+        return $order;
+    }
+
+    private function resolveRegion(array $addressData, int $customerId): array
+    {
+        if (!empty($addressData['region_id'])) {
+            return $addressData;
+        }
+
+        $countryId = $addressData['country_id'] ?? null;
+        if (!$countryId) {
+            return $addressData;
+        }
+
+        $regionName = $addressData['region'] ?? null;
+        if ($regionName) {
+            try {
+                $collection = $this->regionCollectionFactory->create();
+                $collection->addCountryFilter($countryId)
+                    ->addRegionNameFilter($regionName);
+                $region = $collection->getFirstItem();
+
+                if ($region && $region->getId()) {
+                    $addressData['region_id'] = (int) $region->getId();
+                    $this->logger->info(sprintf(
+                        'CoffeeClub DEBUG: [resolveRegion] Found region_id %d for "%s"',
+                        (int) $region->getId(),
+                        $regionName
+                    ));
+                    return $addressData;
+                }
+            } catch (Throwable $exception) {
+                $this->logger->warning(
+                    'CoffeeClub DEBUG: [resolveRegion] Name lookup failed: ' . $exception->getMessage()
+                );
+            }
+        }
+
+        try {
+            $customer = $this->customerRepository->getById($customerId);
+            $defaultShippingId = $customer->getDefaultShipping();
+
+            if ($defaultShippingId) {
+                $defaultAddress = $this->addressRepository->getById((int) $defaultShippingId);
+
+                if ($defaultAddress->getCountryId() === $countryId
+                    && $defaultAddress->getRegionId()
+                ) {
+                    $addressData['region_id'] = (int) $defaultAddress->getRegionId();
+
+                    $region = $defaultAddress->getRegion();
+                    if ($region instanceof RegionInterface) {
+                        $addressData['region'] = (string) $region->getRegion();
+                    } elseif (is_string($region)) {
+                        $addressData['region'] = $region;
+                    }
+
+                    $this->logger->info(sprintf(
+                        'CoffeeClub DEBUG: [resolveRegion] Copied region_id %d from customer default',
+                        (int) $defaultAddress->getRegionId()
+                    ));
+                    return $addressData;
+                }
+            }
+        } catch (Throwable $exception) {
+            $this->logger->warning(
+                'CoffeeClub DEBUG: [resolveRegion] Default address lookup failed: '
+                . $exception->getMessage()
+            );
+        }
+
+        $this->logger->warning(
+            'CoffeeClub DEBUG: [resolveRegion] Could not resolve region_id for country ' . $countryId
+        );
+
+        return $addressData;
+    }
+
+    /**
+     * Pause the subscription due to a system reason (product gone/disabled)
+     * and notify the customer.
+     */
+    private function pauseAndNotify(SubscriptionInterface $subscription, string $reason): void
+    {
+        $subscription->setStatus(SubscriptionInterface::STATUS_PAUSED);
+        $saved = $this->subscriptionRepository->save($subscription);
+
+        $this->saveRunLog($saved, RunLogInterface::OUTCOME_FAILURE, null, $reason);
+
+        // Uses the paused template, with the specific system reason.
+        $this->emailNotifier->notifyPaused($saved, $reason);
+    }
+
+    private function saveRunLog(
+        SubscriptionInterface $subscription,
+        string                $outcome,
+        ?int                  $orderId,
+        ?string               $reason
+    ): void {
+        try {
+            $runLog = $this->runLogFactory->create();
+            $runLog->setSubscriptionId((int) $subscription->getSubscriptionId());
+            $runLog->setRunDate($this->dateTime->gmtDate('Y-m-d H:i:s'));
+            $runLog->setOutcome($outcome);
+            $runLog->setOrderId($orderId);
+            $runLog->setFailureReason($reason);
+            $this->runLogRepository->save($runLog);
+        } catch (Throwable $exception) {
+            $this->logger->error(
+                'CoffeeClub DEBUG: Failed to save run log: ' . $exception->getMessage()
+            );
+        }
+    }
+
+    /**
+     * Calculate the next due date using the admin-configured frequency modifier.
+     *
+     * @param string $frequency Frequency code (e.g. "monthly", "weekly").
+     * @return string           Next date in Y-m-d format.
+     * @throws LocalizedException When the frequency is not configured.
+     */
+    private function calculateNextDueDateFromNow(string $frequency): string
+    {
+        if (!$this->frequencyProvider->isValid($frequency)) {
+            throw new LocalizedException(
+                __('Frequency "%1" is not configured.', $frequency)
+            );
+        }
+
+        return $this->frequencyProvider->calculateNextDate($frequency);
+    }
+
+    private function unserializeAddress(string $serialized): array
+    {
+        $data = json_decode($serialized, true);
+        if (!is_array($data)) {
+            $data = @unserialize($serialized);
+        }
+        if (!is_array($data)) {
+            return [];
+        }
+        if (isset($data['street']) && is_string($data['street'])) {
+            $data['street'] = [$data['street']];
+        }
+        return $data;
+    }
+
+    /**
+     * @return int
+     */
+    private function getFailureThreshold(): int
+    {
+        $value = $this->scopeConfig->getValue(
+            self::CONFIG_PATH_FAILURE_THRESHOLD,
+            ScopeInterface::SCOPE_STORE
+        );
+
+        return max(1, (int) $value);
+    }
+
+    /**
+     * @return string
+     */
+    private function getShippingMethod(): string
+    {
+        $value = $this->scopeConfig->getValue(
+            self::CONFIG_PATH_SHIPPING_METHOD,
+            ScopeInterface::SCOPE_STORE
+        );
+
+        return $value ?: 'flatrate_flatrate';
+    }
+
+    /**
+     * @return string
+     */
+    private function getPaymentMethod(): string
+    {
+        $value = $this->scopeConfig->getValue(
+            self::CONFIG_PATH_PAYMENT_METHOD,
+            ScopeInterface::SCOPE_STORE
+        );
+
+        return $value ?: 'checkmo';
+    }
+}
+</file>
+
+<file path="Model/Subscription/SubscriptionManagement.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Model\Subscription;
+
+use Codilar\CoffeeClub\Api\Data\SubscriptionInterface;
+use Codilar\CoffeeClub\Api\SubscriptionRepositoryInterface;
+use Codilar\CoffeeClub\Model\Config\FrequencyProvider;
+use Magento\Framework\Exception\LocalizedException;
+
+/**
+ * Business logic for customer-initiated subscription actions.
+ *
+ * Emails are sent AFTER the database save succeeds. If save fails,
+ * no email is sent — the customer is only notified about actions that
+ * actually took effect.
+ */
+class SubscriptionManagement
+{
+    public function __construct(
+        protected SubscriptionRepositoryInterface $subscriptionRepository,
+        protected FrequencyProvider               $frequencyProvider,
+        protected EmailNotifier                   $emailNotifier
+    ) {
+    }
+
+    /**
+     * Pause an active subscription.
+     *
+     * @throws LocalizedException
+     */
+    public function pause(int $subscriptionId, int $customerId): SubscriptionInterface
+    {
+        $subscription = $this->subscriptionRepository->getById($subscriptionId);
+        $this->assertCustomerOwnsSubscription($subscription, $customerId);
+        $this->assertStatusIsActive($subscription);
+
+        $subscription->setStatus(SubscriptionInterface::STATUS_PAUSED);
+        $saved = $this->subscriptionRepository->save($subscription);
+
+        // Notify the customer after a successful save.
+        $this->emailNotifier->notifyPaused($saved);
+
+        return $saved;
+    }
+
+    /**
+     * Resume a paused subscription.
+     *
+     * @throws LocalizedException
+     */
+    public function resume(int $subscriptionId, int $customerId): SubscriptionInterface
+    {
+        $subscription = $this->subscriptionRepository->getById($subscriptionId);
+        $this->assertCustomerOwnsSubscription($subscription, $customerId);
+
+        if ($subscription->getStatus() !== SubscriptionInterface::STATUS_PAUSED) {
+            throw new LocalizedException(__('Only paused subscriptions can be resumed.'));
+        }
+
+        $subscription->setStatus(SubscriptionInterface::STATUS_ACTIVE);
+        $subscription->setConsecutiveFailureCount(0);
+        $subscription->setNextDueDate(
+            $this->calculateNextDueDate($subscription->getFrequency())
+        );
+
+        $saved = $this->subscriptionRepository->save($subscription);
+
+        // Notify the customer after a successful save.
+        $this->emailNotifier->notifyResumed($saved);
+
+        return $saved;
+    }
+
+    /**
+     * Skip the next scheduled delivery.
+     *
+     * @throws LocalizedException
+     */
+    public function skipNext(int $subscriptionId, int $customerId): SubscriptionInterface
+    {
+        $subscription = $this->subscriptionRepository->getById($subscriptionId);
+        $this->assertCustomerOwnsSubscription($subscription, $customerId);
+        $this->assertStatusIsActive($subscription);
+
+        // Capture the date that is being skipped BEFORE we change it.
+        // This is the date we tell the customer about in the email.
+        $skippedDate = $subscription->getNextDueDate();
+
+        $subscription->setNextDueDate(
+            $this->calculateNextDueDate(
+                $subscription->getFrequency(),
+                $subscription->getNextDueDate()
+            )
+        );
+
+        $saved = $this->subscriptionRepository->save($subscription);
+
+        // Notify the customer after a successful save.
+        $this->emailNotifier->notifySkipped($saved, $skippedDate);
+
+        return $saved;
+    }
+
+    /**
+     * Cancel a subscription.
+     *
+     * @throws LocalizedException
+     */
+    public function cancel(int $subscriptionId, int $customerId): SubscriptionInterface
+    {
+        $subscription = $this->subscriptionRepository->getById($subscriptionId);
+        $this->assertCustomerOwnsSubscription($subscription, $customerId);
+
+        $subscription->setStatus(SubscriptionInterface::STATUS_CANCELLED);
+        $saved = $this->subscriptionRepository->save($subscription);
+
+        // Notify the customer after a successful save.
+        $this->emailNotifier->notifyCancelled($saved);
+
+        return $saved;
+    }
+
+    /**
+     * Calculate the next due date based on the configured frequency.
+     *
+     * @throws LocalizedException
+     */
+    public function calculateNextDueDate(string $frequency, ?string $baseDate = null): string
+    {
+        if (!$this->frequencyProvider->isValid($frequency)) {
+            throw new LocalizedException(
+                __('Frequency "%1" is not configured.', $frequency)
+            );
+        }
+
+        return $this->frequencyProvider->calculateNextDate($frequency, $baseDate);
+    }
+
+    /**
+     * @throws LocalizedException
+     */
+    private function assertCustomerOwnsSubscription(
+        SubscriptionInterface $subscription,
+        int                   $customerId
+    ): void {
+        if ($subscription->getCustomerId() !== $customerId) {
+            throw new LocalizedException(
+                __('You do not have permission to manage this subscription.')
+            );
+        }
+    }
+
+    /**
+     * @throws LocalizedException
+     */
+    private function assertStatusIsActive(SubscriptionInterface $subscription): void
+    {
+        if ($subscription->getStatus() !== SubscriptionInterface::STATUS_ACTIVE) {
+            throw new LocalizedException(
+                __('Only active subscriptions can be modified.')
+            );
+        }
+    }
+}
+</file>
+
+<file path="Model/CategoryValidator.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Model;
+
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Store\Model\ScopeInterface;
+
+class CategoryValidator
+{
+    private const CONFIG_PATH_ALLOWED_CATEGORIES = 'coffeeclub/general/allowed_categories';
+
+    public function __construct(
+        protected ScopeConfigInterface $scopeConfig
+    ) {
+    }
+
+    /**
+     * Check if a product belongs to any allowed subscription category.
+     *
+     * @param array $categoryIds
+     * @return bool
+     */
+    public function isProductInAllowedCategory(array $categoryIds): bool
+    {
+        if (empty($categoryIds)) {
+            return false;
+        }
+
+        $allowedCategories = $this->getAllowedCategoryIds();
+
+        if (empty($allowedCategories)) {
+            return false;
+        }
+
+        return !empty(array_intersect(
+            array_map('intval', $categoryIds),
+            $allowedCategories
+        ));
+    }
+
+    /**
+     * Get configured allowed category IDs.
+     *
+     * @return int[]
+     */
+    public function getAllowedCategoryIds(): array
+    {
+        $value = $this->scopeConfig->getValue(
+            self::CONFIG_PATH_ALLOWED_CATEGORIES,
+            ScopeInterface::SCOPE_STORE
+        );
+
+        if (empty($value)) {
+            return [];
+        }
+
+        return array_map('intval', explode(',', (string) $value));
+    }
+}
+</file>
+
+<file path="Model/ProductTypeValidator.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Model;
+
+use Magento\Catalog\Api\Data\ProductInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Store\Model\ScopeInterface;
+
+class ProductTypeValidator
+{
+    private const CONFIG_PATH_ALLOWED_TYPES = 'coffeeclub/general/allowed_product_types';
+
+    public function __construct(
+        protected ScopeConfigInterface $scopeConfig
+    ) {
+    }
+
+    /**
+     * @param ProductInterface $product
+     * @return bool
+     */
+    public function isEligibleType(ProductInterface $product): bool
+    {
+        return in_array($product->getTypeId(), $this->getAllowedTypes(), true);
+    }
+
+    /**
+     * @param ProductInterface $product
+     * @throws LocalizedException
+     */
+    public function assertEligibleType(ProductInterface $product): void
+    {
+        if (!$this->isEligibleType($product)) {
+            throw new LocalizedException(
+                __(
+                    'Subscriptions are not available for "%1" product type.',
+                    $product->getTypeId()
+                )
+            );
+        }
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getAllowedTypes(): array
+    {
+        $value = $this->scopeConfig->getValue(
+            self::CONFIG_PATH_ALLOWED_TYPES,
+            ScopeInterface::SCOPE_STORE
+        );
+
+        if (empty($value)) {
+            return ['simple', 'configurable'];
+        }
+
+        return array_map('trim', explode(',', (string) $value));
+    }
+}
+</file>
+
+<file path="Model/RunLog.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Model;
+
+use Codilar\CoffeeClub\Api\Data\RunLogInterface;
+use Magento\Framework\Model\AbstractModel;
+
+class RunLog extends AbstractModel implements RunLogInterface
+{
+    protected function _construct(): void
+    {
+        $this->_init(\Codilar\CoffeeClub\Model\ResourceModel\RunLog::class);
+    }
+
+    public function getLogId(): ?int
+    {
+        return $this->getData(self::LOG_ID) !== null
+            ? (int) $this->getData(self::LOG_ID)
+            : null;
+    }
+
+    public function setLogId(int $logId): RunLogInterface
+    {
+        return $this->setData(self::LOG_ID, $logId);
+    }
+
+    public function getSubscriptionId(): int
+    {
+        return (int) $this->getData(self::SUBSCRIPTION_ID);
+    }
+
+    public function setSubscriptionId(int $subscriptionId): RunLogInterface
+    {
+        return $this->setData(self::SUBSCRIPTION_ID, $subscriptionId);
+    }
+
+    public function getRunDate(): string
+    {
+        return (string) $this->getData(self::RUN_DATE);
+    }
+
+    public function setRunDate(string $runDate): RunLogInterface
+    {
+        return $this->setData(self::RUN_DATE, $runDate);
+    }
+
+    public function getOutcome(): string
+    {
+        return (string) $this->getData(self::OUTCOME);
+    }
+
+    public function setOutcome(string $outcome): RunLogInterface
+    {
+        return $this->setData(self::OUTCOME, $outcome);
+    }
+
+    public function getOrderId(): ?int
+    {
+        return $this->getData(self::ORDER_ID) !== null
+            ? (int) $this->getData(self::ORDER_ID)
+            : null;
+    }
+
+    public function setOrderId(?int $orderId): RunLogInterface
+    {
+        return $this->setData(self::ORDER_ID, $orderId);
+    }
+
+    public function getFailureReason(): ?string
+    {
+        return $this->getData(self::FAILURE_REASON);
+    }
+
+    public function setFailureReason(?string $failureReason): RunLogInterface
+    {
+        return $this->setData(self::FAILURE_REASON, $failureReason);
+    }
+}
+</file>
+
+<file path="Model/RunLogRepository.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Model;
+
+use Codilar\CoffeeClub\Api\Data\RunLogInterface;
+use Codilar\CoffeeClub\Api\RunLogRepositoryInterface;
+use Codilar\CoffeeClub\Model\ResourceModel\RunLog as RunLogResource;
+use Magento\Framework\Api\SearchResultsInterface;
+use Codilar\CoffeeClub\Model\ResourceModel\RunLog\CollectionFactory;
+use Magento\Framework\Api\SearchCriteria\CollectionProcessorInterface;
+use Magento\Framework\Api\SearchCriteriaInterface;
+use Magento\Framework\Api\SearchResultsInterfaceFactory;
+use Magento\Framework\Exception\CouldNotSaveException;
+
+class RunLogRepository implements RunLogRepositoryInterface
+{
+    public function __construct(
+        protected RunLogResource                $resource,
+        protected CollectionFactory             $collectionFactory,
+        protected SearchResultsInterfaceFactory $searchResultsFactory,
+        protected CollectionProcessorInterface  $collectionProcessor
+    )
+    {
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function save(RunLogInterface $runLog): RunLogInterface
+    {
+        try {
+            /** @var RunLog $runLog */
+            $this->resource->save($runLog);
+        } catch (\Exception $exception) {
+            throw new CouldNotSaveException(
+                __('Could not save the run log: %1', $exception->getMessage()),
+                $exception
+            );
+        }
+
+        return $runLog;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getBySubscriptionId(int $subscriptionId, int $limit = 50): array
+    {
+        $collection = $this->collectionFactory->create();
+        $collection->addFieldToFilter(RunLogInterface::SUBSCRIPTION_ID, $subscriptionId)
+            ->setOrder(RunLogInterface::RUN_DATE, 'DESC')
+            ->setPageSize($limit);
+
+        return $collection->getItems();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getList(SearchCriteriaInterface $searchCriteria): SearchResultsInterface
+    {
+        $collection = $this->collectionFactory->create();
+        $this->collectionProcessor->process($searchCriteria, $collection);
+
+        $searchResults = $this->searchResultsFactory->create();
+        $searchResults->setSearchCriteria($searchCriteria);
+        $searchResults->setItems($collection->getItems());
+        $searchResults->setTotalCount($collection->getSize());
+
+        return $searchResults;
+    }
+}
+</file>
+
+<file path="Model/Subscription.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Model;
+
+use Codilar\CoffeeClub\Api\Data\SubscriptionInterface;
+use Magento\Framework\Model\AbstractModel;
+
+class Subscription extends AbstractModel implements SubscriptionInterface
+{
+    protected function _construct(): void
+    {
+        $this->_init(\Codilar\CoffeeClub\Model\ResourceModel\Subscription::class);
+    }
+
+    public function getSubscriptionId(): ?int
+    {
+        return $this->getData(self::SUBSCRIPTION_ID) !== null
+            ? (int) $this->getData(self::SUBSCRIPTION_ID)
+            : null;
+    }
+
+    public function setSubscriptionId(int $subscriptionId): SubscriptionInterface
+    {
+        return $this->setData(self::SUBSCRIPTION_ID, $subscriptionId);
+    }
+
+    public function getCustomerId(): int
+    {
+        return (int) $this->getData(self::CUSTOMER_ID);
+    }
+
+    public function setCustomerId(int $customerId): SubscriptionInterface
+    {
+        return $this->setData(self::CUSTOMER_ID, $customerId);
+    }
+
+    public function getProductId(): int
+    {
+        return (int) $this->getData(self::PRODUCT_ID);
+    }
+
+    public function setProductId(int $productId): SubscriptionInterface
+    {
+        return $this->setData(self::PRODUCT_ID, $productId);
+    }
+
+    public function getParentProductId(): ?int
+    {
+        $value = $this->getData(self::PARENT_PRODUCT_ID);
+        return $value !== null ? (int) $value : null;
+    }
+
+    public function setParentProductId(?int $parentProductId): SubscriptionInterface
+    {
+        return $this->setData(self::PARENT_PRODUCT_ID, $parentProductId);
+    }
+
+    public function getQuantity(): int
+    {
+        return (int) $this->getData(self::QUANTITY);
+    }
+
+    public function setQuantity(int $quantity): SubscriptionInterface
+    {
+        return $this->setData(self::QUANTITY, $quantity);
+    }
+
+    public function getAgreedPrice(): float
+    {
+        return (float) $this->getData(self::AGREED_PRICE);
+    }
+
+    public function setAgreedPrice(float $agreedPrice): SubscriptionInterface
+    {
+        return $this->setData(self::AGREED_PRICE, $agreedPrice);
+    }
+
+    public function getFrequency(): string
+    {
+        return (string) $this->getData(self::FREQUENCY);
+    }
+
+    public function setFrequency(string $frequency): SubscriptionInterface
+    {
+        return $this->setData(self::FREQUENCY, $frequency);
+    }
+
+    public function getDeliveryAddress(): string
+    {
+        return (string) $this->getData(self::DELIVERY_ADDRESS);
+    }
+
+    public function setDeliveryAddress(string $deliveryAddress): SubscriptionInterface
+    {
+        return $this->setData(self::DELIVERY_ADDRESS, $deliveryAddress);
+    }
+
+    public function getStatus(): string
+    {
+        return (string) $this->getData(self::STATUS);
+    }
+
+    public function setStatus(string $status): SubscriptionInterface
+    {
+        return $this->setData(self::STATUS, $status);
+    }
+
+    public function getNextDueDate(): ?string
+    {
+        return $this->getData(self::NEXT_DUE_DATE);
+    }
+
+    public function setNextDueDate(?string $nextDueDate): SubscriptionInterface
+    {
+        return $this->setData(self::NEXT_DUE_DATE, $nextDueDate);
+    }
+
+    public function getLastRunDate(): ?string
+    {
+        return $this->getData(self::LAST_RUN_DATE);
+    }
+
+    public function setLastRunDate(?string $lastRunDate): SubscriptionInterface
+    {
+        return $this->setData(self::LAST_RUN_DATE, $lastRunDate);
+    }
+
+    public function getConsecutiveFailureCount(): int
+    {
+        return (int) $this->getData(self::CONSECUTIVE_FAILURE_COUNT);
+    }
+
+    public function setConsecutiveFailureCount(int $consecutiveFailureCount): SubscriptionInterface
+    {
+        return $this->setData(self::CONSECUTIVE_FAILURE_COUNT, $consecutiveFailureCount);
+    }
+}
+</file>
+
+<file path="Model/SubscriptionRepository.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Model;
+
+use Codilar\CoffeeClub\Api\Data\SubscriptionInterface;
+use Codilar\CoffeeClub\Api\SubscriptionRepositoryInterface;
+use Codilar\CoffeeClub\Model\ResourceModel\Subscription as SubscriptionResource;
+use Codilar\CoffeeClub\Model\ResourceModel\Subscription\CollectionFactory;
+use Magento\Framework\Api\SearchCriteria\CollectionProcessorInterface;
+use Magento\Framework\Api\SearchCriteriaInterface;
+use Magento\Framework\Api\SearchResultsInterfaceFactory;
+use Magento\Framework\Exception\CouldNotDeleteException;
+use Magento\Framework\Exception\CouldNotSaveException;
+use Magento\Framework\Exception\NoSuchEntityException;
+
+class SubscriptionRepository implements SubscriptionRepositoryInterface
+{
+    public function __construct(
+        protected SubscriptionResource $resource,
+        protected SubscriptionFactory $subscriptionFactory,
+        protected CollectionFactory $collectionFactory,
+        protected SearchResultsInterfaceFactory $searchResultsFactory,
+        protected CollectionProcessorInterface $collectionProcessor
+    ) {
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function save(SubscriptionInterface $subscription): SubscriptionInterface
+    {
+        try {
+            /** @var Subscription $subscription */
+            $this->resource->save($subscription);
+        } catch (\Exception $exception) {
+            throw new CouldNotSaveException(
+                __('Could not save the subscription: %1', $exception->getMessage()),
+                $exception
+            );
+        }
+
+        return $subscription;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getById(int $subscriptionId): SubscriptionInterface
+    {
+        $subscription = $this->subscriptionFactory->create();
+        $this->resource->load($subscription, $subscriptionId);
+
+        if (!$subscription->getId()) {
+            throw new NoSuchEntityException(
+                __('Subscription with ID "%1" does not exist.', $subscriptionId)
+            );
+        }
+
+        return $subscription;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getList(SearchCriteriaInterface $searchCriteria): \Magento\Framework\Api\SearchResultsInterface
+    {
+        $collection = $this->collectionFactory->create();
+        $this->collectionProcessor->process($searchCriteria, $collection);
+
+        $searchResults = $this->searchResultsFactory->create();
+        $searchResults->setSearchCriteria($searchCriteria);
+        $searchResults->setItems($collection->getItems());
+        $searchResults->setTotalCount($collection->getSize());
+
+        return $searchResults;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function delete(SubscriptionInterface $subscription): bool
+    {
+        try {
+            /** @var Subscription $subscription */
+            $this->resource->delete($subscription);
+        } catch (\Exception $exception) {
+            throw new CouldNotDeleteException(
+                __('Could not delete the subscription: %1', $exception->getMessage()),
+                $exception
+            );
+        }
+
+        return true;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function deleteById(int $subscriptionId): bool
+    {
+        return $this->delete($this->getById($subscriptionId));
+    }
+}
+</file>
+
+<file path="view/frontend/email/subscription_cancelled.html">
+<!--@subject Your Coffee Club subscription has been cancelled @-->
+<!--@vars {
+"var customer_name":"Customer Name",
+"var subscription_id":"Subscription ID",
+"var product_name":"Product Name"
+} @-->
+
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f4f4f4; padding:20px 0; font-family:Arial, Helvetica, sans-serif; color:#333;">
+    <tr>
+        <td align="center">
+            <table cellpadding="0" cellspacing="0" border="0" width="600" style="background:#ffffff; border-radius:6px; overflow:hidden;">
+                <tr>
+                    <td style="background:#6b4f3a; color:#ffffff; padding:20px 30px; font-size:20px; font-weight:bold;">
+                        Coffee Club
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:30px;">
+                        <p style="margin:0 0 15px; font-size:16px;">
+                            Hi {{var customer_name}},
+                        </p>
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            Your Coffee Club subscription <strong>#{{var subscription_id}}</strong>
+                            for <strong>{{var product_name}}</strong> has been cancelled.
+                            No further deliveries will be scheduled for this subscription.
+                        </p>
+
+                        <div style="background:#f8d7da; border-left:4px solid #d9534f; padding:12px 15px; margin:20px 0; font-size:14px; color:#842029;">
+                            <strong>Cancelled.</strong> Future recurring orders for this subscription will not be created.
+                        </div>
+
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            Your order history for this subscription is preserved and remains
+                            available in your account dashboard.
+                        </p>
+
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            If you change your mind, you can start a new subscription from
+                            any eligible product page at any time.
+                        </p>
+
+                        <p style="margin:20px 0 0; font-size:14px;">
+                            — The Coffee Club Team
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="background:#f9f9f9; padding:15px 30px; font-size:12px; color:#888; text-align:center;">
+                        This is an automated message. Please do not reply directly to this email.
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</file>
+
+<file path="view/frontend/email/subscription_consecutive_failures.html">
+<!--@subject Your Coffee Club subscription has been paused due to repeated failures @-->
+<!--@vars {
+"var customer_name":"Customer Name",
+"var subscription_id":"Subscription ID",
+"var product_name":"Product Name",
+"var failure_count":"Number of Consecutive Failures",
+"var failure_reason":"Reason for the Latest Failure"
+} @-->
+
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f4f4f4; padding:20px 0; font-family:Arial, Helvetica, sans-serif; color:#333;">
+    <tr>
+        <td align="center">
+            <table cellpadding="0" cellspacing="0" border="0" width="600" style="background:#ffffff; border-radius:6px; overflow:hidden;">
+                <tr>
+                    <td style="background:#6b4f3a; color:#ffffff; padding:20px 30px; font-size:20px; font-weight:bold;">
+                        Coffee Club
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:30px;">
+                        <p style="margin:0 0 15px; font-size:16px;">
+                            Hi {{var customer_name}},
+                        </p>
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            We have been unable to process your Coffee Club subscription
+                            <strong>#{{var subscription_id}}</strong>
+                            ({{var product_name}}) for
+                            <strong>{{var failure_count}} consecutive attempts</strong>.
+                        </p>
+
+                        <div style="background:#f8d7da; border-left:4px solid #d9534f; padding:12px 15px; margin:20px 0; font-size:14px; color:#842029;">
+                            <strong>Your subscription has been paused.</strong><br/>
+                            No further orders will be attempted until you resume it.
+                        </div>
+
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            <strong>Reason for the latest failure:</strong>
+                        </p>
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5; padding-left:15px; border-left:3px solid #e0e0e0; color:#555;">
+                            {{var failure_reason}}
+                        </p>
+
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            This usually means the product is no longer available, out of stock,
+                            or there is a problem with your delivery address or payment method.
+                        </p>
+
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            <strong>What to do next:</strong>
+                        </p>
+                        <ol style="margin:0 0 20px; padding-left:20px; font-size:14px; line-height:1.6;">
+                            <li>Sign in to your account.</li>
+                            <li>Open your Coffee Club subscriptions.</li>
+                            <li>Review this subscription's details.</li>
+                            <li>Once resolved, click <strong>Resume Subscription</strong>.</li>
+                        </ol>
+
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            If you need help, please contact our support team.
+                        </p>
+
+                        <p style="margin:20px 0 0; font-size:14px;">
+                            — The Coffee Club Team
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="background:#f9f9f9; padding:15px 30px; font-size:12px; color:#888; text-align:center;">
+                        This is an automated message. Please do not reply directly to this email.
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</file>
+
+<file path="view/frontend/email/subscription_order_failure.html">
+<!--@subject We could not process your Coffee Club delivery @-->
+<!--@vars {
+"var customer_name":"Customer Name",
+"var subscription_id":"Subscription ID",
+"var product_name":"Product Name",
+"var failure_count":"Consecutive Failures",
+"var failure_reason":"Failure Reason"
+} @-->
+
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f4f4f4; padding:20px 0; font-family:Arial, Helvetica, sans-serif; color:#333;">
+    <tr>
+        <td align="center">
+            <table cellpadding="0" cellspacing="0" border="0" width="600" style="background:#ffffff; border-radius:6px; overflow:hidden;">
+                <tr>
+                    <td style="background:#6b4f3a; color:#ffffff; padding:20px 30px; font-size:20px; font-weight:bold;">
+                        Coffee Club
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:30px;">
+                        <p style="margin:0 0 15px; font-size:16px;">
+                            Hi {{var customer_name}},
+                        </p>
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            We tried to process the next delivery for your Coffee Club
+                            subscription <strong>#{{var subscription_id}}</strong>
+                            ({{var product_name}}), but the attempt failed.
+                        </p>
+
+                        <div style="background:#fff8e5; border-left:4px solid #f0ad4e; padding:12px 15px; margin:20px 0; font-size:14px; color:#664d03;">
+                            <strong>Reason:</strong> {{var failure_reason}}
+                        </div>
+
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            <strong>Consecutive failed attempts so far:</strong> {{var failure_count}}
+                        </p>
+
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            We will retry automatically on the next scheduled date.
+                            If the failures continue, your subscription will be paused
+                            automatically and you will be notified.
+                        </p>
+
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            You can review and update your subscription at any time from
+                            your account dashboard.
+                        </p>
+
+                        <p style="margin:20px 0 0; font-size:14px;">
+                            — The Coffee Club Team
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="background:#f9f9f9; padding:15px 30px; font-size:12px; color:#888; text-align:center;">
+                        This is an automated message. Please do not reply directly to this email.
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</file>
+
+<file path="view/frontend/email/subscription_order_success.html">
+<!--@subject Your Coffee Club order #{{var order_increment_id}} has been placed @-->
+<!--@vars {
+"var customer_name":"Customer Name",
+"var subscription_id":"Subscription ID",
+"var product_name":"Product Name",
+"var quantity":"Quantity",
+"var order_increment_id":"Order Number",
+"var order_total":"Order Total",
+"var next_delivery_date":"Next Delivery Date"
+} @-->
+
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f4f4f4; padding:20px 0; font-family:Arial, Helvetica, sans-serif; color:#333;">
+    <tr>
+        <td align="center">
+            <table cellpadding="0" cellspacing="0" border="0" width="600" style="background:#ffffff; border-radius:6px; overflow:hidden;">
+                <tr>
+                    <td style="background:#6b4f3a; color:#ffffff; padding:20px 30px; font-size:20px; font-weight:bold;">
+                        Coffee Club
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:30px;">
+                        <p style="margin:0 0 15px; font-size:16px;">
+                            Hi {{var customer_name}},
+                        </p>
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            Your Coffee Club subscription delivery is on its way.
+                            A recurring order has been created for subscription
+                            <strong>#{{var subscription_id}}</strong>.
+                        </p>
+
+                        <div style="background:#d4edda; border-left:4px solid #28a745; padding:12px 15px; margin:20px 0; font-size:14px; color:#0f5132;">
+                            <strong>Order #{{var order_increment_id}}</strong> has been placed successfully.
+                        </div>
+
+                        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:20px 0; border:1px solid #e0e0e0; border-radius:4px;">
+                            <tr>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px; color:#666; width:45%;">Product</td>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px;">{{var product_name}}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px; color:#666;">Quantity</td>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px;">{{var quantity}}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px; color:#666;">Order total</td>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px;">{{var order_total}}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 15px; font-size:14px; color:#666;">Next delivery</td>
+                                <td style="padding:12px 15px; font-size:14px; font-weight:bold;">{{var next_delivery_date}}</td>
+                            </tr>
+                        </table>
+
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            You can view this order and manage your subscription from your account dashboard.
+                        </p>
+
+                        <p style="margin:20px 0 0; font-size:14px;">
+                            — The Coffee Club Team
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="background:#f9f9f9; padding:15px 30px; font-size:12px; color:#888; text-align:center;">
+                        This is an automated message. Please do not reply directly to this email.
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</file>
+
+<file path="view/frontend/email/subscription_paused.html">
+<!--@subject Your Coffee Club subscription has been paused @-->
+<!--@vars {
+"var customer_name":"Customer Name",
+"var subscription_id":"Subscription ID",
+"var product_name":"Product Name",
+"var reason":"Reason"
+} @-->
+
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f4f4f4; padding:20px 0; font-family:Arial, Helvetica, sans-serif; color:#333;">
+    <tr>
+        <td align="center">
+            <table cellpadding="0" cellspacing="0" border="0" width="600" style="background:#ffffff; border-radius:6px; overflow:hidden;">
+                <tr>
+                    <td style="background:#6b4f3a; color:#ffffff; padding:20px 30px; font-size:20px; font-weight:bold;">
+                        Coffee Club
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:30px;">
+                        <p style="margin:0 0 15px; font-size:16px;">
+                            Hi {{var customer_name}},
+                        </p>
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            Your Coffee Club subscription <strong>#{{var subscription_id}}</strong>
+                            for <strong>{{var product_name}}</strong> is now paused.
+                            No deliveries will be scheduled while it is paused.
+                        </p>
+
+                        <div style="background:#fff8e5; border-left:4px solid #f0ad4e; padding:12px 15px; margin:20px 0; font-size:14px; color:#664d03;">
+                            <strong>Reason:</strong> {{var reason}}
+                        </div>
+
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            You can resume this subscription at any time from your account dashboard.
+                        </p>
+
+                        <p style="margin:20px 0 0; font-size:14px;">
+                            — The Coffee Club Team
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="background:#f9f9f9; padding:15px 30px; font-size:12px; color:#888; text-align:center;">
+                        This is an automated message. Please do not reply directly to this email.
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</file>
+
+<file path="view/frontend/email/subscription_resumed.html">
+<!--@subject Your Coffee Club subscription has been resumed @-->
+<!--@vars {
+"var customer_name":"Customer Name",
+"var subscription_id":"Subscription ID",
+"var product_name":"Product Name",
+"var frequency_label":"Delivery Frequency",
+"var next_delivery_date":"Next Delivery Date"
+} @-->
+
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f4f4f4; padding:20px 0; font-family:Arial, Helvetica, sans-serif; color:#333;">
+    <tr>
+        <td align="center">
+            <table cellpadding="0" cellspacing="0" border="0" width="600" style="background:#ffffff; border-radius:6px; overflow:hidden;">
+                <tr>
+                    <td style="background:#6b4f3a; color:#ffffff; padding:20px 30px; font-size:20px; font-weight:bold;">
+                        Coffee Club
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:30px;">
+                        <p style="margin:0 0 15px; font-size:16px;">
+                            Hi {{var customer_name}},
+                        </p>
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            Good news — your Coffee Club subscription <strong>#{{var subscription_id}}</strong>
+                            for <strong>{{var product_name}}</strong> has been resumed.
+                            Deliveries will continue on your regular schedule.
+                        </p>
+
+                        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:20px 0; border:1px solid #e0e0e0; border-radius:4px;">
+                            <tr>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px; color:#666; width:45%;">Delivery frequency</td>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px;">{{var frequency_label}}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 15px; font-size:14px; color:#666;">Next delivery</td>
+                                <td style="padding:12px 15px; font-size:14px; font-weight:bold;">{{var next_delivery_date}}</td>
+                            </tr>
+                        </table>
+
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            If you did not request this change, please contact us as soon as possible.
+                        </p>
+
+                        <p style="margin:20px 0 0; font-size:14px;">
+                            — The Coffee Club Team
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="background:#f9f9f9; padding:15px 30px; font-size:12px; color:#888; text-align:center;">
+                        This is an automated message. Please do not reply directly to this email.
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</file>
+
+<file path="view/frontend/email/subscription_skipped.html">
+<!--@subject Your next Coffee Club delivery has been skipped @-->
+<!--@vars {
+"var customer_name":"Customer Name",
+"var subscription_id":"Subscription ID",
+"var product_name":"Product Name",
+"var skipped_date":"Skipped Date",
+"var next_delivery_date":"Next Delivery Date"
+} @-->
+
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f4f4f4; padding:20px 0; font-family:Arial, Helvetica, sans-serif; color:#333;">
+    <tr>
+        <td align="center">
+            <table cellpadding="0" cellspacing="0" border="0" width="600" style="background:#ffffff; border-radius:6px; overflow:hidden;">
+                <tr>
+                    <td style="background:#6b4f3a; color:#ffffff; padding:20px 30px; font-size:20px; font-weight:bold;">
+                        Coffee Club
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:30px;">
+                        <p style="margin:0 0 15px; font-size:16px;">
+                            Hi {{var customer_name}},
+                        </p>
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            As requested, we have skipped the next delivery for your Coffee Club
+                            subscription <strong>#{{var subscription_id}}</strong>
+                            ({{var product_name}}).
+                        </p>
+
+                        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:20px 0; border:1px solid #e0e0e0; border-radius:4px;">
+                            <tr>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px; color:#666; width:45%;">Skipped delivery date</td>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px;">{{var skipped_date}}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 15px; font-size:14px; color:#666;">Next delivery date</td>
+                                <td style="padding:12px 15px; font-size:14px; font-weight:bold;">{{var next_delivery_date}}</td>
+                            </tr>
+                        </table>
+
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            Your subscription remains active, and the following delivery will
+                            proceed as scheduled.
+                        </p>
+
+                        <p style="margin:20px 0 0; font-size:14px;">
+                            — The Coffee Club Team
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="background:#f9f9f9; padding:15px 30px; font-size:12px; color:#888; text-align:center;">
+                        This is an automated message. Please do not reply directly to this email.
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</file>
+
+<file path="view/frontend/email/subscription_started.html">
+<!--@subject Your Coffee Club subscription is confirmed @-->
+<!--@vars {
+"var customer_name":"Customer Name",
+"var subscription_id":"Subscription ID",
+"var product_name":"Product Name",
+"var quantity":"Quantity",
+"var frequency_label":"Delivery Frequency",
+"var agreed_price":"Agreed Price",
+"var next_delivery_date":"Next Delivery Date"
+} @-->
+
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f4f4f4; padding:20px 0; font-family:Arial, Helvetica, sans-serif; color:#333;">
+    <tr>
+        <td align="center">
+            <table cellpadding="0" cellspacing="0" border="0" width="600" style="background:#ffffff; border-radius:6px; overflow:hidden;">
+                <tr>
+                    <td style="background:#6b4f3a; color:#ffffff; padding:20px 30px; font-size:20px; font-weight:bold;">
+                        Coffee Club
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:30px;">
+                        <p style="margin:0 0 15px; font-size:16px;">
+                            Hi {{var customer_name}},
+                        </p>
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            Thank you for joining the Coffee Club. Your subscription
+                            <strong>#{{var subscription_id}}</strong> has been created successfully.
+                        </p>
+
+                        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:20px 0; border:1px solid #e0e0e0; border-radius:4px;">
+                            <tr>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px; color:#666; width:45%;">Product</td>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px;">{{var product_name}}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px; color:#666;">Quantity per delivery</td>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px;">{{var quantity}}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px; color:#666;">Delivery frequency</td>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px;">{{var frequency_label}}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px; color:#666;">Agreed price</td>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px;">{{var agreed_price}}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 15px; font-size:14px; color:#666;">Next delivery</td>
+                                <td style="padding:12px 15px; font-size:14px; font-weight:bold;">{{var next_delivery_date}}</td>
+                            </tr>
+                        </table>
+
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            You can pause, skip, or cancel this subscription at any time from your account dashboard.
+                        </p>
+
+                        <p style="margin:20px 0 0; font-size:14px;">
+                            — The Coffee Club Team
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="background:#f9f9f9; padding:15px 30px; font-size:12px; color:#888; text-align:center;">
+                        This is an automated message. Please do not reply directly to this email.
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</file>
+
+<file path="view/frontend/layout/catalog_product_view.xml">
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="product.info.main">
+            <block class="Codilar\CoffeeClub\Block\Product\SubscriptionOption"
+                   name="coffeeclub.subscription.option"
+                   template="Codilar_CoffeeClub::subscription/form.phtml"
+                   after="product.info.price">
+                <arguments>
+                    <argument name="title" xsi:type="string" translate="true">
+                        Subscribe &amp; Save
+                    </argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+    </body>
+</page>
+</file>
+
+<file path="view/frontend/layout/coffeeclub_subscription_index.xml">
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="customer_account"/>
+    <body>
+        <referenceBlock name="page.main.title">
+            <action method="setPageTitle">
+                <argument translate="true" name="title" xsi:type="string">My Coffee Club Subscriptions</argument>
+            </action>
+        </referenceBlock>
+        <referenceContainer name="content">
+            <block class="Codilar\CoffeeClub\Block\Customer\SubscriptionList"
+                   name="coffeeclub.subscription.list"
+                   template="Codilar_CoffeeClub::subscription/list.phtml"/>
+        </referenceContainer>
+    </body>
+</page>
+</file>
+
+<file path="view/frontend/layout/coffeeclub_subscription_view.xml">
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="customer_account"/>
+    <body>
+        <referenceContainer name="content">
+            <block class="Codilar\CoffeeClub\Block\Customer\SubscriptionView" name="coffeeclub.subscription.view" template="Codilar_CoffeeClub::subscription/view.phtml"/>
+        </referenceContainer>
+    </body>
+</page>
+</file>
+
+<file path="view/frontend/layout/customer_account.xml">
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="customer_account_navigation">
+            <block class="Magento\Customer\Block\Account\SortLinkInterface"
+                   name="customer-account-navigation-coffeeclub-link"
+                   after="customer-account-navigation-orders-link">
+                <arguments>
+                    <argument name="path" xsi:type="string">coffeeclub/subscription/index</argument>
+                    <argument name="label" xsi:type="string" translate="true">Coffee Club</argument>
+                    <argument name="sortOrder" xsi:type="number">40</argument>
+                </arguments>
+            </block>
+        </referenceBlock>
+    </body>
+</page>
+</file>
+
+<file path="view/frontend/templates/subscription/form.phtml">
+<?php
+/**
+ * @var \Codilar\CoffeeClub\Block\Product\SubscriptionOption $block
+ */
+$isEdit         = $block->getData('edit_mode');
+$subscription   = $block->getData('subscription');
+$product        = $block->getProduct();
+$frequencies    = $block->getFrequencies();
+$isConfigurable = !$isEdit && $block->isConfigurable();
+?>
+<?php if ($block->isEligible() || $isEdit): ?>
+    <div class="coffeeclub-subscription-form">
+
+        <?php if ($isEdit): ?>
+        <h3><?= $block->escapeHtml(__('Edit Subscription')) ?></h3>
+        <form action="<?= $block->escapeUrl($block->getUrl('coffeeclub/subscription/update')) ?>"
+              method="post"
+              id="coffeeclub-subscription-form"
+              data-mage-init='{"validation": {}}'>
+            <input type="hidden" name="form_key"
+                   value="<?= $block->escapeHtmlAttr($block->getFormKey()) ?>"/>
+            <input type="hidden" name="subscription_id"
+                   value="<?= (int) $subscription->getSubscriptionId() ?>"/>
+            <?php else: ?>
+            <h3><?= $block->escapeHtml(__('Subscribe & Save')) ?></h3>
+            <form action="<?= $block->escapeUrl($block->getUrl('coffeeclub/subscription/create')) ?>"
+                  method="post"
+                  id="coffeeclub-subscription-form"
+                  data-mage-init='{"validation": {}, "Codilar_CoffeeClub/js/subscription-option": {}}'>
+                <input type="hidden" name="form_key"
+                       value="<?= $block->escapeHtmlAttr($block->getFormKey()) ?>"/>
+
+                <?php if ($isConfigurable): ?>
+                    <input type="hidden" name="parent_product_id"
+                           value="<?= (int) $product->getId() ?>"/>
+                    <input type="hidden" name="child_product_id" value=""/>
+                <?php else: ?>
+                    <input type="hidden" name="product_id"
+                           value="<?= (int) $product->getId() ?>"/>
+                <?php endif; ?>
+                <?php endif; ?>
+
+                <?php if ($isConfigurable): ?>
+                    <div class="message info coffeeclub-variant-hint">
+                        <span>
+                            <?= $block->escapeHtml(
+                                __('Please select your product options above to activate the subscription.')
+                            ) ?>
+                        </span>
+                    </div>
+                <?php endif; ?>
+
+                <div class="field required">
+                    <label for="coffeeclub-quantity" class="label">
+                        <span><?= $block->escapeHtml(__('Quantity per delivery')) ?></span>
+                    </label>
+                    <div class="control">
+                        <input type="number"
+                               id="coffeeclub-quantity"
+                               name="quantity"
+                               value="<?= $isEdit ? (int) $subscription->getQuantity() : 1 ?>"
+                               min="1"
+                               class="input-text required-entry validate-number"
+                               data-validate="{required:true, 'validate-greater-than-zero':true}"/>
+                    </div>
+                </div>
+
+                <div class="field required">
+                    <label for="coffeeclub-frequency" class="label">
+                        <span><?= $block->escapeHtml(__('Delivery Frequency')) ?></span>
+                    </label>
+                    <div class="control">
+                        <select id="coffeeclub-frequency"
+                                name="frequency"
+                                class="select required-entry">
+                            <?php foreach ($frequencies as $frequency): ?>
+                                <option value="<?= $block->escapeHtmlAttr($frequency['code']) ?>"
+                                    <?= $isEdit && $subscription->getFrequency() === $frequency['code']
+                                        ? ' selected="selected"' : '' ?>>
+                                    <?= $block->escapeHtml($frequency['label']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+
+                <?php if ($isEdit): ?>
+                    <div class="field required">
+                        <label for="coffeeclub-address" class="label">
+                            <span><?= $block->escapeHtml(__('Delivery Address')) ?></span>
+                        </label>
+                        <div class="control">
+                            <?php $address = json_decode($subscription->getDeliveryAddress(), true); ?>
+                            <input type="text"
+                                   id="coffeeclub-address-street"
+                                   name="delivery_address[street][0]"
+                                   value="<?= $block->escapeHtmlAttr($address['street'][0] ?? '') ?>"
+                                   class="input-text required-entry"
+                                   placeholder="<?= $block->escapeHtmlAttr(__('Street')) ?>"/>
+                            <input type="text"
+                                   name="delivery_address[city]"
+                                   value="<?= $block->escapeHtmlAttr($address['city'] ?? '') ?>"
+                                   class="input-text required-entry"
+                                   placeholder="<?= $block->escapeHtmlAttr(__('City')) ?>"/>
+                            <input type="text"
+                                   name="delivery_address[postcode]"
+                                   value="<?= $block->escapeHtmlAttr($address['postcode'] ?? '') ?>"
+                                   class="input-text required-entry"
+                                   placeholder="<?= $block->escapeHtmlAttr(__('Postcode')) ?>"/>
+                            <input type="text"
+                                   name="delivery_address[telephone]"
+                                   value="<?= $block->escapeHtmlAttr($address['telephone'] ?? '') ?>"
+                                   class="input-text required-entry"
+                                   placeholder="<?= $block->escapeHtmlAttr(__('Telephone')) ?>"/>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <div class="actions-toolbar">
+                    <button type="submit"
+                            class="action primary"
+                        <?= $isConfigurable ? 'disabled="disabled"' : '' ?>>
+                        <span><?= $block->escapeHtml(
+                                $isEdit ? __('Update Subscription') : __('Start Subscription')
+                            ) ?></span>
+                    </button>
+                </div>
+            </form>
+
+            <?php if ($isConfigurable): ?>
+                <?php
+                /**
+                 * Server-generated map: { "size:5|color:10" => 259, ... }
+                 *
+                 * Built from the SAME data Magento uses to render the swatches,
+                 * so it can never disagree with what's on the page.
+                 *
+                 * Our JS reads the currently selected swatch options, builds the
+                 * same key, and looks up the matching simple-product ID.
+                 */
+                ?>
+                <script>
+                    window.coffeeclubParentId = <?= (int) $product->getId() ?>;
+                    window.coffeeclubChildMap = <?= /* @noEscape */ json_encode($block->getChildProductMap()) ?>;
+                    console.log('[CoffeeClub] server map loaded — children:',
+                        Object.keys(window.coffeeclubChildMap || {}).length);
+                </script>
+            <?php endif; ?>
+
+    </div>
+<?php endif; ?>
+</file>
+
+<file path="view/frontend/templates/subscription/list.phtml">
+<?php
+/**
+ * @var \Codilar\CoffeeClub\Block\Customer\SubscriptionList $block
+ */
+?>
+<?php $subscriptions = $block->getSubscriptions(); ?>
+
+<?php if (empty($subscriptions)): ?>
+    <div class="message info empty">
+        <span><?= $block->escapeHtml(__('You have no active Coffee Club subscriptions.')) ?></span>
+    </div>
+    <div class="actions-toolbar">
+        <a href="<?= $block->escapeUrl($block->getUrl('catalog/category/view', ['id' => 3])) ?>"
+           class="action primary">
+            <span><?= $block->escapeHtml(__('Browse Coffee Products')) ?></span>
+        </a>
+    </div>
+<?php else: ?>
+    <div class="table-wrapper subscriptions">
+        <table class="data table table-subscriptions" id="my-subscriptions-table">
+            <caption class="table-caption"><?= $block->escapeHtml(__('Coffee Club Subscriptions')) ?></caption>
+            <thead>
+            <tr>
+                <th scope="col" class="col id"><?= $block->escapeHtml(__('ID')) ?></th>
+                <th scope="col" class="col product"><?= $block->escapeHtml(__('Product')) ?></th>
+                <th scope="col" class="col quantity"><?= $block->escapeHtml(__('Qty')) ?></th>
+                <th scope="col" class="col frequency"><?= $block->escapeHtml(__('Frequency')) ?></th>
+                <th scope="col" class="col next-date"><?= $block->escapeHtml(__('Next Delivery')) ?></th>
+                <th scope="col" class="col status"><?= $block->escapeHtml(__('Status')) ?></th>
+                <th scope="col" class="col actions"><?= $block->escapeHtml(__('Actions')) ?></th>
+            </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($subscriptions as $subscription): ?>
+                <tr>
+                    <td data-th="<?= $block->escapeHtmlAttr(__('ID')) ?>"
+                        class="col id">
+                        <?= (int) $subscription->getSubscriptionId() ?>
+                    </td>
+                    <td data-th="<?= $block->escapeHtmlAttr(__('Product')) ?>"
+                        class="col product">
+                        <?= $block->escapeHtml($subscription->getProductId()) ?>
+                    </td>
+                    <td data-th="<?= $block->escapeHtmlAttr(__('Qty')) ?>"
+                        class="col quantity">
+                        <?= (int) $subscription->getQuantity() ?>
+                    </td>
+                    <td data-th="<?= $block->escapeHtmlAttr(__('Frequency')) ?>"
+                        class="col frequency">
+                        <?= $block->escapeHtml(
+                            $block->getFrequencyLabel($subscription->getFrequency())
+                        ) ?>
+                    </td>
+                    <td data-th="<?= $block->escapeHtmlAttr(__('Next Delivery')) ?>"
+                        class="col next-date">
+                        <?= $block->escapeHtml($subscription->getNextDueDate() ?? '—') ?>
+                    </td>
+                    <td data-th="<?= $block->escapeHtmlAttr(__('Status')) ?>"
+                        class="col status">
+                            <span class="subscription-status status-<?= $block->escapeHtmlAttr(
+                                $subscription->getStatus()
+                            ) ?>">
+                                <?= $block->escapeHtml(
+                                    $block->getStatusLabel($subscription->getStatus())
+                                ) ?>
+                            </span>
+                    </td>
+                    <td data-th="<?= $block->escapeHtmlAttr(__('Actions')) ?>"
+                        class="col actions">
+                        <a href="<?= $block->escapeUrl(
+                            $block->getActionUrl('view', $subscription->getSubscriptionId())
+                        ) ?>" class="action view">
+                            <span><?= $block->escapeHtml(__('View')) ?></span>
+                        </a>
+                    </td>
+                </tr>
+                <?php
+                $history = $block->getSubscriptionHistory(
+                    $subscription->getSubscriptionId(),
+                    5
+                );
+                ?>
+                <?php if (!empty($history)): ?>
+                    <tr class="subscription-history-row">
+                        <td colspan="7">
+                            <h4><?= $block->escapeHtml(__('Recent Orders')) ?></h4>
+                            <ul class="subscription-history">
+                                <?php foreach ($history as $log): ?>
+                                    <li>
+                                        <?= $block->escapeHtml($log->getRunDate()) ?>
+                                        —
+                                        <?= $block->escapeHtml($log->getOutcome()) ?>
+                                        <?php if ($log->getOrderId()): ?>
+                                            (Order #<?= (int) $log->getOrderId() ?>)
+                                        <?php endif; ?>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </td>
+                    </tr>
+                <?php endif; ?>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+<?php endif; ?>
+</file>
+
+<file path="view/frontend/templates/subscription/view.phtml">
+<?php
+/** @var \Codilar\CoffeeClub\Block\Customer\SubscriptionView $block */
+$subscription = $block->getSubscription();
+if (!$subscription) {
+    return;
+}
+$status = $subscription->getStatus();
+?>
+<div class="subscription-view-actions">
+    <h3><?= $block->escapeHtml(__('Subscription Status: %1', ucfirst($status))) ?></h3>
+
+    <div class="actions-toolbar" style="margin-top: 20px;">
+        <!-- Pause / Skip Actions -->
+        <?php if ($status === 'active'): ?>
+            <form action="<?= $block->escapeUrl($block->getUrl('*/*/pause')) ?>"
+                  method="post"
+                  style="display:inline-block; margin-right:10px;">
+                <?= $block->getBlockHtml('formkey') ?>
+                <input type="hidden"
+                       name="subscription_id"
+                       value="<?= (int) $subscription->getSubscriptionId() ?>"/>
+                <button type="submit" class="action primary">
+                    <span><?= $block->escapeHtml(__('Pause Subscription')) ?></span>
+                </button>
+            </form>
+
+            <form action="<?= $block->escapeUrl($block->getUrl('*/*/skip')) ?>"
+                  method="post"
+                  style="display:inline-block; margin-right:10px;">
+                <?= $block->getBlockHtml('formkey') ?>
+                <input type="hidden"
+                       name="subscription_id"
+                       value="<?= (int) $subscription->getSubscriptionId() ?>"/>
+                <button type="submit" class="action">
+                    <span><?= $block->escapeHtml(__('Skip Next Delivery')) ?></span>
+                </button>
+            </form>
+
+        <?php elseif ($status === 'paused'): ?>
+            <form action="<?= $block->escapeUrl($block->getUrl('*/*/resume')) ?>"
+                  method="post"
+                  style="display:inline-block; margin-right:10px;">
+                <?= $block->getBlockHtml('formkey') ?>
+                <input type="hidden"
+                       name="subscription_id"
+                       value="<?= (int) $subscription->getSubscriptionId() ?>"/>
+                <button type="submit" class="action primary">
+                    <span><?= $block->escapeHtml(__('Resume Subscription')) ?></span>
+                </button>
+            </form>
+        <?php endif; ?>
+
+        <!-- Cancel Action -->
+        <?php if ($status !== 'cancelled'): ?>
+            <form action="<?= $block->escapeUrl($block->getUrl('*/*/cancel')) ?>"
+                  method="post"
+                  style="display:inline-block;">
+                <?= $block->getBlockHtml('formkey') ?>
+                <input type="hidden"
+                       name="subscription_id"
+                       value="<?= (int) $subscription->getSubscriptionId() ?>"/>
+                <button type="submit" class="action danger">
+                    <span><?= $block->escapeHtml(__('Cancel Subscription')) ?></span>
+                </button>
+            </form>
+        <?php endif; ?>
+    </div>
+</div>
+
+<?php if ($status !== 'cancelled'): ?>
+    <div class="subscription-edit-form"
+         style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ccc;">
+        <h3><?= $block->escapeHtml(__('Edit Subscription Details')) ?></h3>
+
+        <form action="<?= $block->escapeUrl($block->getUrl('*/*/update')) ?>"
+              method="post"
+              data-mage-init='{"validation": {}}'>
+            <?= $block->getBlockHtml('formkey') ?>
+            <input type="hidden"
+                   name="subscription_id"
+                   value="<?= (int) $subscription->getSubscriptionId() ?>"/>
+
+            <fieldset class="fieldset">
+                <div class="field required">
+                    <label class="label">
+                        <span><?= $block->escapeHtml(__('Quantity')) ?></span>
+                    </label>
+                    <div class="control">
+                        <input type="number"
+                               name="quantity"
+                               value="<?= (int) $subscription->getQuantity() ?>"
+                               min="1"
+                               class="input-text required-entry validate-number"/>
+                    </div>
+                </div>
+
+                <div class="field required">
+                    <label class="label">
+                        <span><?= $block->escapeHtml(__('Frequency')) ?></span>
+                    </label>
+                    <div class="control">
+                        <select name="frequency" class="select required-entry">
+                            <?php foreach ($block->getFrequencies() as $frequency): ?>
+                                <option value="<?= $block->escapeHtmlAttr($frequency['code']) ?>"
+                                    <?= $subscription->getFrequency() === $frequency['code']
+                                        ? ' selected="selected"' : '' ?>>
+                                    <?= $block->escapeHtml($frequency['label']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+
+                <?php $address = json_decode($subscription->getDeliveryAddress(), true); ?>
+
+                <h4 style="margin-top: 20px; margin-bottom: 10px; font-weight: bold;">
+                    <?= $block->escapeHtml(__('Delivery Address')) ?>
+                </h4>
+
+                <div class="field required">
+                    <label class="label">
+                        <span><?= $block->escapeHtml(__('Street Address')) ?></span>
+                    </label>
+                    <div class="control">
+                        <input type="text"
+                               name="delivery_address[street][0]"
+                               value="<?= $block->escapeHtmlAttr($address['street'][0] ?? '') ?>"
+                               class="input-text required-entry"/>
+                    </div>
+                </div>
+
+                <div class="field required">
+                    <label class="label">
+                        <span><?= $block->escapeHtml(__('City')) ?></span>
+                    </label>
+                    <div class="control">
+                        <input type="text"
+                               name="delivery_address[city]"
+                               value="<?= $block->escapeHtmlAttr($address['city'] ?? '') ?>"
+                               class="input-text required-entry"/>
+                    </div>
+                </div>
+
+                <div class="field required">
+                    <label class="label">
+                        <span><?= $block->escapeHtml(__('Postcode')) ?></span>
+                    </label>
+                    <div class="control">
+                        <input type="text"
+                               name="delivery_address[postcode]"
+                               value="<?= $block->escapeHtmlAttr($address['postcode'] ?? '') ?>"
+                               class="input-text required-entry"/>
+                    </div>
+                </div>
+
+                <div class="field required">
+                    <label class="label">
+                        <span><?= $block->escapeHtml(__('Telephone')) ?></span>
+                    </label>
+                    <div class="control">
+                        <input type="text"
+                               name="delivery_address[telephone]"
+                               value="<?= $block->escapeHtmlAttr($address['telephone'] ?? '') ?>"
+                               class="input-text required-entry"/>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="actions-toolbar">
+                <div class="primary">
+                    <button type="submit" class="action primary">
+                        <span><?= $block->escapeHtml(__('Update Subscription')) ?></span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+<?php endif; ?>
+
+<!-- Subscription Order History -->
+<div class="subscription-history-section"
+     style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ccc;">
+    <h3><?= $block->escapeHtml(__('Order History & Run Logs')) ?></h3>
+
+    <?php $history = $block->getSubscriptionHistory((int) $subscription->getSubscriptionId()); ?>
+
+    <?php if (empty($history)): ?>
+        <p><?= $block->escapeHtml(
+                __('No orders have been generated for this subscription yet.')
+            ) ?></p>
+    <?php else: ?>
+        <div class="table-wrapper">
+            <table class="data table">
+                <thead>
+                <tr>
+                    <th><?= $block->escapeHtml(__('Run Date')) ?></th>
+                    <th><?= $block->escapeHtml(__('Outcome')) ?></th>
+                    <th><?= $block->escapeHtml(__('Order ID')) ?></th>
+                    <th><?= $block->escapeHtml(__('Remarks / Reason')) ?></th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($history as $log): ?>
+                    <tr>
+                        <td><?= $block->escapeHtml($log->getRunDate()) ?></td>
+                        <td><?= $block->escapeHtml(ucfirst($log->getOutcome())) ?></td>
+                        <td><?= $log->getOrderId() ? '#' . (int) $log->getOrderId() : '—' ?></td>
+                        <td><?= $block->escapeHtml($log->getFailureReason() ?? '—') ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php endif; ?>
+</div>
+</file>
+
+<file path="view/frontend/web/css/source/_extend.less">
+.coffeeclub-subscription-form {
+    .coffeeclub-variant-hint {
+        margin-bottom: 15px;
+    }
+
+    button[type="submit"][disabled] {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+</file>
+
+<file path="view/frontend/web/js/subscription-option.js">
+define([
+    'jquery',
+    'domReady!'
+], function ($) {
+    'use strict';
+
+    return function () {
+        var form = document.getElementById('coffeeclub-subscription-form');
+        if (!form) {
+            return;
+        }
+
+        var parentIn = form.querySelector('input[name="parent_product_id"]');
+        var childIn  = form.querySelector('input[name="child_product_id"]');
+        var btn      = form.querySelector('button[type="submit"]');
+        var hint     = form.querySelector('.coffeeclub-variant-hint');
+
+        if (!parentIn || !childIn || !btn) {
+            console.log('[CoffeeClub] form is not configurable — skipping');
+            return;
+        }
+
+        var parentId = parseInt(parentIn.value, 10) || 0;
+        var map      = window.coffeeclubChildMap || {};
+
+        console.log('[CoffeeClub] init — parent =', parentId,
+            '| map size =', Object.keys(map).length);
+
+        /**
+         * Read the currently selected swatch options from the DOM.
+         * Returns { "size": "5", "color": "10", ... }
+         */
+        function readSelectedOptions() {
+            var result = {};
+            var productForm = document.getElementById('product_addtocart_form');
+            if (!productForm) {
+                return result;
+            }
+
+            // Swatch-style attributes (what Luma and most themes emit).
+            productForm.querySelectorAll('.swatch-attribute').forEach(function (attrEl) {
+                var code = attrEl.getAttribute('attribute-code')
+                    || attrEl.getAttribute('data-attribute-code');
+                if (!code) {
+                    return;
+                }
+                var sel = attrEl.querySelector('.swatch-option.selected');
+                if (!sel) {
+                    return;
+                }
+                var optId = sel.getAttribute('option-id')
+                    || sel.getAttribute('data-option-id');
+                if (optId) {
+                    result[code] = String(optId);
+                }
+            });
+
+            // Dropdown-style attributes (fallback).
+            productForm.querySelectorAll('select.super-attribute-select').forEach(function (sel) {
+                // name="super_attribute[143]" → attribute id 143
+                var m = (sel.getAttribute('name') || '').match(/super_attribute\[(\d+)\]/);
+                if (m && sel.value) {
+                    // We store dropdowns by attribute id prefixed so we can tell them apart.
+                    result['__id_' + m[1]] = String(sel.value);
+                }
+            });
+
+            return result;
+        }
+
+        /**
+         * Build the same normalized key PHP used and look up the child product.
+         */
+        function resolveChildId() {
+            var selected = readSelectedOptions();
+            var codes = Object.keys(selected).filter(function (k) {
+                return k.indexOf('__id_') !== 0;
+            });
+            codes.sort();
+
+            if (!codes.length) {
+                return 0;
+            }
+
+            var parts = [];
+            for (var i = 0; i < codes.length; i++) {
+                parts.push(codes[i] + ':' + selected[codes[i]]);
+            }
+            var key = parts.join('|');
+            var id = parseInt(map[key], 10) || 0;
+
+            if (id !== parentId && id > 0) {
+                return id;
+            }
+            return 0;
+        }
+
+        var last = null;
+        function sync() {
+            var id = resolveChildId();
+            if (id === last) {
+                return;
+            }
+            last = id;
+
+            if (id > 0) {
+                childIn.value = id;
+                btn.disabled = false;
+                if (hint) { hint.style.display = 'none'; }
+                console.log('[CoffeeClub] ✅ variant captured:', id);
+            } else {
+                childIn.value = '';
+                btn.disabled = true;
+                if (hint) { hint.style.display = ''; }
+                console.log('[CoffeeClub] ⏳ no complete variant yet');
+            }
+        }
+
+        // Any click or change on the page re-evaluates the selection.
+        document.addEventListener('click',  function () { setTimeout(sync, 50); setTimeout(sync, 250); }, true);
+        document.addEventListener('change', function () { setTimeout(sync, 50); setTimeout(sync, 250); }, true);
+
+        // Safety net.
+        setInterval(sync, 400);
+
+        // Never submit without a valid child ID.
+        form.addEventListener('submit', function (e) {
+            var v = parseInt(childIn.value, 10) || 0;
+            console.log('[CoffeeClub] submit — child_product_id =', v);
+            if (v <= 0) {
+                e.preventDefault();
+                alert('Please select a product variant before starting a subscription.');
+            }
+        });
+
+        sync();
+    };
+});
+</file>
+
+<file path="composer.json">
+{
+    "name": "codilar/module-coffeeclub",
+    "description": "Coffee Club subscriptions module for MageCafe",
+    "type": "magento2-module",
+    "version": "1.0.0",
+    "license": "proprietary",
+    "require": {
+        "php": "~8.4.0 || ~8.5.0",
+        "magento/framework": "103.0.*"
+    },
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Codilar\\CoffeeClub\\": ""
+        }
+    }
+}
+</file>
+
+<file path="registration.php">
+<?php
+declare(strict_types=1);
+
+use Magento\Framework\Component\ComponentRegistrar;
+
+ComponentRegistrar::register(
+    ComponentRegistrar::MODULE,
+    'Codilar_CoffeeClub',
+    __DIR__
+);
+</file>
+
+</files>

@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <coffeeclub>
+            <general>
+                <enabled>1</enabled>
+                <allowed_categories></allowed_categories>
+                <allowed_product_types>simple,configurable</allowed_product_types>
+                <failure_threshold>3</failure_threshold>
+                <frequencies><![CDATA[[
+                    {"code":"weekly","label":"Weekly","modifier":"+7 days"},
+                    {"code":"fortnightly","label":"Fortnightly","modifier":"+14 days"},
+                    {"code":"monthly","label":"Monthly","modifier":"+1 month"},
+                    {"code":"quarterly","label":"Quarterly","modifier":"+3 months"},
+                    {"code":"yearly","label":"Yearly","modifier":"+1 year"}
+                ]]]></frequencies>
+                <shipping_method>flatrate_flatrate</shipping_method>
+                <payment_method>checkmo</payment_method>
+            </general>
+        </coffeeclub>
+    </default>
+</config>

@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Email:etc/email_templates.xsd">
+
+    <template id="codilar_coffeeclub_subscription_started"
+              label="Coffee Club: Subscription Started"
+              file="subscription_started.html"
+              type="html"
+              module="Codilar_CoffeeClub"
+              area="frontend"/>
+
+    <template id="codilar_coffeeclub_subscription_paused"
+              label="Coffee Club: Subscription Paused"
+              file="subscription_paused.html"
+              type="html"
+              module="Codilar_CoffeeClub"
+              area="frontend"/>
+
+    <template id="codilar_coffeeclub_subscription_resumed"
+              label="Coffee Club: Subscription Resumed"
+              file="subscription_resumed.html"
+              type="html"
+              module="Codilar_CoffeeClub"
+              area="frontend"/>
+
+    <template id="codilar_coffeeclub_subscription_skipped"
+              label="Coffee Club: Next Delivery Skipped"
+              file="subscription_skipped.html"
+              type="html"
+              module="Codilar_CoffeeClub"
+              area="frontend"/>
+
+    <template id="codilar_coffeeclub_subscription_cancelled"
+              label="Coffee Club: Subscription Cancelled"
+              file="subscription_cancelled.html"
+              type="html"
+              module="Codilar_CoffeeClub"
+              area="frontend"/>
+
+    <template id="codilar_coffeeclub_subscription_order_success"
+              label="Coffee Club: Subscription Order Success"
+              file="subscription_order_success.html"
+              type="html"
+              module="Codilar_CoffeeClub"
+              area="frontend"/>
+
+    <template id="codilar_coffeeclub_subscription_order_failure"
+              label="Coffee Club: Subscription Order Failure"
+              file="subscription_order_failure.html"
+              type="html"
+              module="Codilar_CoffeeClub"
+              area="frontend"/>
+
+    <template id="codilar_coffeeclub_subscription_consecutive_failures"
+              label="Coffee Club: Subscription Consecutive Failures"
+              file="subscription_consecutive_failures.html"
+              type="html"
+              module="Codilar_CoffeeClub"
+              area="frontend"/>
+
+</config>

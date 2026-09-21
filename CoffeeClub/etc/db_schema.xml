@@ -1,0 +1,95 @@
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+
+    <table name="codilar_coffeeclub_subscription" resource="default" engine="innodb"
+           comment="Coffee Club subscription records">
+        <column xsi:type="int" name="subscription_id" padding="10" unsigned="true" nullable="false"
+                identity="true" comment="Subscription ID"/>
+        <column xsi:type="int" name="customer_id" padding="10" unsigned="true" nullable="false"
+                comment="Customer ID"/>
+        <column xsi:type="int" name="product_id" padding="10" unsigned="true" nullable="false"
+                comment="Actual product ID (simple child for configurable)"/>
+        <column xsi:type="int" name="parent_product_id" padding="10" unsigned="true" nullable="true"
+                comment="Parent configurable product ID (null for simple)"/>
+        <column xsi:type="int" name="quantity" padding="10" unsigned="true" nullable="false"
+                default="1" comment="Quantity per delivery"/>
+        <column xsi:type="decimal" name="agreed_price" precision="12" scale="4" nullable="false"
+                comment="Price locked at subscription creation"/>
+        <column xsi:type="varchar" name="frequency" length="32" nullable="false"
+                comment="fortnightly or monthly"/>
+        <column xsi:type="text" name="delivery_address" nullable="false"
+                comment="Serialised delivery address"/>
+        <column xsi:type="varchar" name="status" length="32" nullable="false" default="active"
+                comment="active, paused, cancelled"/>
+        <column xsi:type="date" name="next_due_date" nullable="true" comment="Next due date"/>
+        <column xsi:type="date" name="last_run_date" nullable="true" comment="Last processed date"/>
+        <column xsi:type="int" name="consecutive_failure_count" padding="10" unsigned="true"
+                nullable="false" default="0" comment="Consecutive failures"/>
+        <column xsi:type="timestamp" name="created_at" nullable="false" default="CURRENT_TIMESTAMP"
+                comment="Created at"/>
+        <column xsi:type="timestamp" name="updated_at" nullable="false"
+                default="CURRENT_TIMESTAMP" on_update="true" comment="Updated at"/>
+
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="subscription_id"/>
+        </constraint>
+
+        <!-- Shortened FK name: was CODILAR_COFFEECLUB_SUB_CUSTOMER_ID_CUSTOMER_ENTITY_ENTITY_ID -->
+        <constraint xsi:type="foreign" referenceId="CC_SUB_CUSTOMER_FK"
+                    table="codilar_coffeeclub_subscription" column="customer_id"
+                    referenceTable="customer_entity" referenceColumn="entity_id"
+                    onDelete="CASCADE"/>
+
+        <!-- Shortened FK name: was CODILAR_COFFEECLUB_SUB_PRODUCT_ID_CATALOG_PRODUCT_ENTITY_ENTITY_ID -->
+        <constraint xsi:type="foreign" referenceId="CC_SUB_PRODUCT_FK"
+                    table="codilar_coffeeclub_subscription" column="product_id"
+                    referenceTable="catalog_product_entity" referenceColumn="entity_id"
+                    onDelete="CASCADE"/>
+
+        <index referenceId="CC_SUB_CUSTOMER_ID" indexType="btree">
+            <column name="customer_id"/>
+        </index>
+        <index referenceId="CC_SUB_STATUS_NEXT_DUE_DATE" indexType="btree">
+            <column name="status"/>
+            <column name="next_due_date"/>
+        </index>
+        <index referenceId="CC_SUB_PRODUCT_ID" indexType="btree">
+            <column name="product_id"/>
+        </index>
+        <index referenceId="CC_SUB_PARENT_PRODUCT_ID" indexType="btree">
+            <column name="parent_product_id"/>
+        </index>
+    </table>
+
+    <table name="codilar_coffeeclub_run_log" resource="default" engine="innodb"
+           comment="Coffee Club scheduled run audit log">
+        <column xsi:type="int" name="log_id" padding="10" unsigned="true" nullable="false"
+                identity="true" comment="Log ID"/>
+        <column xsi:type="int" name="subscription_id" padding="10" unsigned="true" nullable="false"
+                comment="Subscription ID"/>
+        <column xsi:type="datetime" name="run_date" nullable="false" comment="Run date and time"/>
+        <column xsi:type="varchar" name="outcome" length="32" nullable="false"
+                comment="success, failure, skipped"/>
+        <column xsi:type="int" name="order_id" padding="10" unsigned="true" nullable="true"
+                comment="Generated order ID"/>
+        <column xsi:type="text" name="failure_reason" nullable="true" comment="Failure reason"/>
+
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="log_id"/>
+        </constraint>
+
+        <!-- Shortened FK name -->
+        <constraint xsi:type="foreign" referenceId="CC_RUNLOG_SUB_FK"
+                    table="codilar_coffeeclub_run_log" column="subscription_id"
+                    referenceTable="codilar_coffeeclub_subscription" referenceColumn="subscription_id"
+                    onDelete="CASCADE"/>
+
+        <index referenceId="CC_RUNLOG_SUB_ID" indexType="btree">
+            <column name="subscription_id"/>
+        </index>
+        <index referenceId="CC_RUNLOG_RUN_DATE" indexType="btree">
+            <column name="run_date"/>
+        </index>
+    </table>
+</schema>

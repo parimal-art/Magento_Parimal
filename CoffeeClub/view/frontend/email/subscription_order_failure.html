@@ -1,0 +1,62 @@
+<!--@subject We could not process your Coffee Club delivery @-->
+<!--@vars {
+"var customer_name":"Customer Name",
+"var subscription_id":"Subscription ID",
+"var product_name":"Product Name",
+"var failure_count":"Consecutive Failures",
+"var failure_reason":"Failure Reason"
+} @-->
+
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f4f4f4; padding:20px 0; font-family:Arial, Helvetica, sans-serif; color:#333;">
+    <tr>
+        <td align="center">
+            <table cellpadding="0" cellspacing="0" border="0" width="600" style="background:#ffffff; border-radius:6px; overflow:hidden;">
+                <tr>
+                    <td style="background:#6b4f3a; color:#ffffff; padding:20px 30px; font-size:20px; font-weight:bold;">
+                        Coffee Club
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:30px;">
+                        <p style="margin:0 0 15px; font-size:16px;">
+                            Hi {{var customer_name}},
+                        </p>
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            We tried to process the next delivery for your Coffee Club
+                            subscription <strong>#{{var subscription_id}}</strong>
+                            ({{var product_name}}), but the attempt failed.
+                        </p>
+
+                        <div style="background:#fff8e5; border-left:4px solid #f0ad4e; padding:12px 15px; margin:20px 0; font-size:14px; color:#664d03;">
+                            <strong>Reason:</strong> {{var failure_reason}}
+                        </div>
+
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            <strong>Consecutive failed attempts so far:</strong> {{var failure_count}}
+                        </p>
+
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            We will retry automatically on the next scheduled date.
+                            If the failures continue, your subscription will be paused
+                            automatically and you will be notified.
+                        </p>
+
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            You can review and update your subscription at any time from
+                            your account dashboard.
+                        </p>
+
+                        <p style="margin:20px 0 0; font-size:14px;">
+                            — The Coffee Club Team
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="background:#f9f9f9; padding:15px 30px; font-size:12px; color:#888; text-align:center;">
+                        This is an automated message. Please do not reply directly to this email.
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>

@@ -1,0 +1,215 @@
+<?php
+/** @var \Codilar\CoffeeClub\Block\Customer\SubscriptionView $block */
+$subscription = $block->getSubscription();
+if (!$subscription) {
+    return;
+}
+$status = $subscription->getStatus();
+?>
+<div class="subscription-view-actions">
+    <h3><?= $block->escapeHtml(__('Subscription Status: %1', ucfirst($status))) ?></h3>
+
+    <div class="actions-toolbar" style="margin-top: 20px;">
+        <!-- Pause / Skip Actions -->
+        <?php if ($status === 'active'): ?>
+            <form action="<?= $block->escapeUrl($block->getUrl('*/*/pause')) ?>"
+                  method="post"
+                  style="display:inline-block; margin-right:10px;">
+                <?= $block->getBlockHtml('formkey') ?>
+                <input type="hidden"
+                       name="subscription_id"
+                       value="<?= (int) $subscription->getSubscriptionId() ?>"/>
+                <button type="submit" class="action primary">
+                    <span><?= $block->escapeHtml(__('Pause Subscription')) ?></span>
+                </button>
+            </form>
+
+            <form action="<?= $block->escapeUrl($block->getUrl('*/*/skip')) ?>"
+                  method="post"
+                  style="display:inline-block; margin-right:10px;">
+                <?= $block->getBlockHtml('formkey') ?>
+                <input type="hidden"
+                       name="subscription_id"
+                       value="<?= (int) $subscription->getSubscriptionId() ?>"/>
+                <button type="submit" class="action">
+                    <span><?= $block->escapeHtml(__('Skip Next Delivery')) ?></span>
+                </button>
+            </form>
+
+        <?php elseif ($status === 'paused'): ?>
+            <form action="<?= $block->escapeUrl($block->getUrl('*/*/resume')) ?>"
+                  method="post"
+                  style="display:inline-block; margin-right:10px;">
+                <?= $block->getBlockHtml('formkey') ?>
+                <input type="hidden"
+                       name="subscription_id"
+                       value="<?= (int) $subscription->getSubscriptionId() ?>"/>
+                <button type="submit" class="action primary">
+                    <span><?= $block->escapeHtml(__('Resume Subscription')) ?></span>
+                </button>
+            </form>
+        <?php endif; ?>
+
+        <!-- Cancel Action -->
+        <?php if ($status !== 'cancelled'): ?>
+            <form action="<?= $block->escapeUrl($block->getUrl('*/*/cancel')) ?>"
+                  method="post"
+                  style="display:inline-block;">
+                <?= $block->getBlockHtml('formkey') ?>
+                <input type="hidden"
+                       name="subscription_id"
+                       value="<?= (int) $subscription->getSubscriptionId() ?>"/>
+                <button type="submit" class="action danger">
+                    <span><?= $block->escapeHtml(__('Cancel Subscription')) ?></span>
+                </button>
+            </form>
+        <?php endif; ?>
+    </div>
+</div>
+
+<?php if ($status !== 'cancelled'): ?>
+    <div class="subscription-edit-form"
+         style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ccc;">
+        <h3><?= $block->escapeHtml(__('Edit Subscription Details')) ?></h3>
+
+        <form action="<?= $block->escapeUrl($block->getUrl('*/*/update')) ?>"
+              method="post"
+              data-mage-init='{"validation": {}}'>
+            <?= $block->getBlockHtml('formkey') ?>
+            <input type="hidden"
+                   name="subscription_id"
+                   value="<?= (int) $subscription->getSubscriptionId() ?>"/>
+
+            <fieldset class="fieldset">
+                <div class="field required">
+                    <label class="label">
+                        <span><?= $block->escapeHtml(__('Quantity')) ?></span>
+                    </label>
+                    <div class="control">
+                        <input type="number"
+                               name="quantity"
+                               value="<?= (int) $subscription->getQuantity() ?>"
+                               min="1"
+                               class="input-text required-entry validate-number"/>
+                    </div>
+                </div>
+
+                <div class="field required">
+                    <label class="label">
+                        <span><?= $block->escapeHtml(__('Frequency')) ?></span>
+                    </label>
+                    <div class="control">
+                        <select name="frequency" class="select required-entry">
+                            <?php foreach ($block->getFrequencies() as $frequency): ?>
+                                <option value="<?= $block->escapeHtmlAttr($frequency['code']) ?>"
+                                    <?= $subscription->getFrequency() === $frequency['code']
+                                        ? ' selected="selected"' : '' ?>>
+                                    <?= $block->escapeHtml($frequency['label']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+
+                <?php $address = json_decode($subscription->getDeliveryAddress(), true); ?>
+
+                <h4 style="margin-top: 20px; margin-bottom: 10px; font-weight: bold;">
+                    <?= $block->escapeHtml(__('Delivery Address')) ?>
+                </h4>
+
+                <div class="field required">
+                    <label class="label">
+                        <span><?= $block->escapeHtml(__('Street Address')) ?></span>
+                    </label>
+                    <div class="control">
+                        <input type="text"
+                               name="delivery_address[street][0]"
+                               value="<?= $block->escapeHtmlAttr($address['street'][0] ?? '') ?>"
+                               class="input-text required-entry"/>
+                    </div>
+                </div>
+
+                <div class="field required">
+                    <label class="label">
+                        <span><?= $block->escapeHtml(__('City')) ?></span>
+                    </label>
+                    <div class="control">
+                        <input type="text"
+                               name="delivery_address[city]"
+                               value="<?= $block->escapeHtmlAttr($address['city'] ?? '') ?>"
+                               class="input-text required-entry"/>
+                    </div>
+                </div>
+
+                <div class="field required">
+                    <label class="label">
+                        <span><?= $block->escapeHtml(__('Postcode')) ?></span>
+                    </label>
+                    <div class="control">
+                        <input type="text"
+                               name="delivery_address[postcode]"
+                               value="<?= $block->escapeHtmlAttr($address['postcode'] ?? '') ?>"
+                               class="input-text required-entry"/>
+                    </div>
+                </div>
+
+                <div class="field required">
+                    <label class="label">
+                        <span><?= $block->escapeHtml(__('Telephone')) ?></span>
+                    </label>
+                    <div class="control">
+                        <input type="text"
+                               name="delivery_address[telephone]"
+                               value="<?= $block->escapeHtmlAttr($address['telephone'] ?? '') ?>"
+                               class="input-text required-entry"/>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="actions-toolbar">
+                <div class="primary">
+                    <button type="submit" class="action primary">
+                        <span><?= $block->escapeHtml(__('Update Subscription')) ?></span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+<?php endif; ?>
+
+<!-- Subscription Order History -->
+<div class="subscription-history-section"
+     style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ccc;">
+    <h3><?= $block->escapeHtml(__('Order History & Run Logs')) ?></h3>
+
+    <?php $history = $block->getSubscriptionHistory((int) $subscription->getSubscriptionId()); ?>
+
+    <?php if (empty($history)): ?>
+        <p><?= $block->escapeHtml(
+                __('No orders have been generated for this subscription yet.')
+            ) ?></p>
+    <?php else: ?>
+        <div class="table-wrapper">
+            <table class="data table">
+                <thead>
+                <tr>
+                    <th><?= $block->escapeHtml(__('Run Date')) ?></th>
+                    <th><?= $block->escapeHtml(__('Outcome')) ?></th>
+                    <th><?= $block->escapeHtml(__('Order ID')) ?></th>
+                    <th><?= $block->escapeHtml(__('Remarks / Reason')) ?></th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($history as $log): ?>
+                    <tr>
+                        <td><?= $block->escapeHtml($log->getRunDate()) ?></td>
+                        <td><?= $block->escapeHtml(ucfirst($log->getOutcome())) ?></td>
+                        <td><?= $log->getOrderId() ? '#' . (int) $log->getOrderId() : '—' ?></td>
+                        <td><?= $block->escapeHtml($log->getFailureReason() ?? '—') ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php endif; ?>
+</div>

@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <tab id="codilar" translate="label" sortOrder="200">
+            <label>Codilar</label>
+        </tab>
+        <section id="coffeeclub" translate="label" type="text" sortOrder="10"
+                 showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Coffee Club</label>
+            <tab>codilar</tab>
+            <resource>Codilar_CoffeeClub::config</resource>
+            <group id="general" translate="label" type="text" sortOrder="10"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>General Settings</label>
+
+                <field id="enabled" translate="label" type="select" sortOrder="10"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Coffee Club Subscriptions</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+
+                <field id="allowed_categories" translate="label comment" type="multiselect" sortOrder="20"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Allowed Categories</label>
+                    <comment>Select categories that can be purchased as subscriptions.</comment>
+                    <source_model>Codilar\CoffeeClub\Model\Config\Source\CategoryList</source_model>
+                </field>
+
+                <field id="allowed_product_types" translate="label comment" type="multiselect"
+                       sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Allowed Product Types</label>
+                    <comment>Select product types eligible for subscriptions.</comment>
+                    <source_model>Codilar\CoffeeClub\Model\Config\Source\ProductType</source_model>
+                </field>
+
+                <field id="failure_threshold" translate="label comment" type="text"
+                       sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Consecutive Failure Threshold</label>
+                    <comment>Number of consecutive failures before pausing a subscription.</comment>
+                    <validate>validate-number validate-greater-than-zero</validate>
+                </field>
+
+                <field id="frequencies" translate="label comment" type="text"
+                       sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Available Frequencies</label>
+                    <comment><![CDATA[
+                        Add one row per delivery frequency.<br/>
+                        <strong>Code</strong> - internal identifier stored on the subscription (e.g. weekly).<br/>
+                        <strong>Label</strong> - what the customer sees (e.g. Weekly).<br/>
+                        <strong>Date Modifier</strong> - a PHP strtotime-style relative modifier
+                        (e.g. +7 days, +14 days, +1 month, +3 months, +1 year).
+                    ]]></comment>
+                    <frontend_model>Codilar\CoffeeClub\Block\Adminhtml\System\Config\Form\Field\FrequencyArray
+                    </frontend_model>
+                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                </field>
+
+                <field id="shipping_method" translate="label comment" type="text"
+                       sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Shipping Method Code</label>
+                    <comment>e.g. flatrate_flatrate, freeshipping_freeshipping</comment>
+                </field>
+
+                <field id="payment_method" translate="label comment" type="text"
+                       sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Payment Method Code</label>
+                    <comment>e.g. checkmo, cashondelivery</comment>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

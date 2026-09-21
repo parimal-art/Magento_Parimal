@@ -1,0 +1,71 @@
+<!--@subject Your Coffee Club subscription is confirmed @-->
+<!--@vars {
+"var customer_name":"Customer Name",
+"var subscription_id":"Subscription ID",
+"var product_name":"Product Name",
+"var quantity":"Quantity",
+"var frequency_label":"Delivery Frequency",
+"var agreed_price":"Agreed Price",
+"var next_delivery_date":"Next Delivery Date"
+} @-->
+
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f4f4f4; padding:20px 0; font-family:Arial, Helvetica, sans-serif; color:#333;">
+    <tr>
+        <td align="center">
+            <table cellpadding="0" cellspacing="0" border="0" width="600" style="background:#ffffff; border-radius:6px; overflow:hidden;">
+                <tr>
+                    <td style="background:#6b4f3a; color:#ffffff; padding:20px 30px; font-size:20px; font-weight:bold;">
+                        Coffee Club
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:30px;">
+                        <p style="margin:0 0 15px; font-size:16px;">
+                            Hi {{var customer_name}},
+                        </p>
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            Thank you for joining the Coffee Club. Your subscription
+                            <strong>#{{var subscription_id}}</strong> has been created successfully.
+                        </p>
+
+                        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:20px 0; border:1px solid #e0e0e0; border-radius:4px;">
+                            <tr>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px; color:#666; width:45%;">Product</td>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px;">{{var product_name}}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px; color:#666;">Quantity per delivery</td>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px;">{{var quantity}}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px; color:#666;">Delivery frequency</td>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px;">{{var frequency_label}}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px; color:#666;">Agreed price</td>
+                                <td style="padding:12px 15px; border-bottom:1px solid #eeeeee; font-size:14px;">{{var agreed_price}}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:12px 15px; font-size:14px; color:#666;">Next delivery</td>
+                                <td style="padding:12px 15px; font-size:14px; font-weight:bold;">{{var next_delivery_date}}</td>
+                            </tr>
+                        </table>
+
+                        <p style="margin:0 0 15px; font-size:14px; line-height:1.5;">
+                            You can pause, skip, or cancel this subscription at any time from your account dashboard.
+                        </p>
+
+                        <p style="margin:20px 0 0; font-size:14px;">
+                            — The Coffee Club Team
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="background:#f9f9f9; padding:15px 30px; font-size:12px; color:#888; text-align:center;">
+                        This is an automated message. Please do not reply directly to this email.
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>

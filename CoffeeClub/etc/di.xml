@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+
+    <preference for="Codilar\CoffeeClub\Api\SubscriptionRepositoryInterface"
+                type="Codilar\CoffeeClub\Model\SubscriptionRepository"/>
+
+    <preference for="Codilar\CoffeeClub\Api\Data\SubscriptionInterface"
+                type="Codilar\CoffeeClub\Model\Subscription"/>
+
+    <preference for="Codilar\CoffeeClub\Api\RunLogRepositoryInterface"
+                type="Codilar\CoffeeClub\Model\RunLogRepository"/>
+
+    <preference for="Codilar\CoffeeClub\Api\Data\RunLogInterface"
+                type="Codilar\CoffeeClub\Model\RunLog"/>
+
+    <type name="Codilar\CoffeeClub\Model\SubscriptionRepository">
+        <arguments>
+            <argument name="collectionProcessor" xsi:type="object">
+                Magento\Framework\Api\SearchCriteria\CollectionProcessor
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Codilar\CoffeeClub\Model\RunLogRepository">
+        <arguments>
+            <argument name="collectionProcessor" xsi:type="object">
+                Magento\Framework\Api\SearchCriteria\CollectionProcessor
+            </argument>
+        </arguments>
+    </type>
+
+</config>
