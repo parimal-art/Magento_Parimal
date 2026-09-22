@@ -48,11 +48,9 @@ Api/
   SubscriptionRepositoryInterface.php
 Block/
   Adminhtml/
-    System/
-      Config/
-        Form/
-          Field/
-            FrequencyArray.php
+    Form/
+      Field/
+        Frequencies.php
   Customer/
     SubscriptionList.php
     SubscriptionView.php
@@ -74,6 +72,7 @@ etc/
   adminhtml/
     system.xml
   frontend/
+    events.xml
     routes.xml
   config.xml
   cron_groups.xml
@@ -84,6 +83,8 @@ etc/
   module.xml
 Model/
   Config/
+    Backend/
+      Frequencies.php
     Source/
       CategoryList.php
       ProductType.php
@@ -105,6 +106,8 @@ Model/
   RunLogRepository.php
   Subscription.php
   SubscriptionRepository.php
+Observer/
+  CaptureVariantProduct.php
 view/
   frontend/
     email/
@@ -153,7 +156,6 @@ interface RunLogInterface
     public const OUTCOME = 'outcome';
     public const ORDER_ID = 'order_id';
     public const FAILURE_REASON = 'failure_reason';
-
     public const OUTCOME_SUCCESS = 'success';
     public const OUTCOME_FAILURE = 'failure';
     public const OUTCOME_SKIPPED = 'skipped';
@@ -493,120 +495,66 @@ interface SubscriptionRepositoryInterface
 }
 </file>
 
-<file path="Block/Adminhtml/System/Config/Form/Field/FrequencyArray.php">
+<file path="Block/Adminhtml/Form/Field/Frequencies.php">
 <?php
 declare(strict_types=1);
 
-namespace Codilar\CoffeeClub\Block\Adminhtml\System\Config\Form\Field;
+namespace Codilar\CoffeeClub\Block\Adminhtml\Form\Field;
 
 use Magento\Config\Block\System\Config\Form\Field\FieldArray\AbstractFieldArray;
+use Magento\Framework\DataObject;
 
 /**
- * Renders the "Available Frequencies" admin field as a dynamic row grid.
- *
- * Each row has three columns: code, label, modifier.
- * Values are persisted as a JSON array by ArraySerialized backend model.
- *
- * Backwards compatible with the previous textarea format:
- * "code:Label:+N unit" one per line — auto-converted to rows on first load.
+ * Renders the dynamic rows grid for managing subscription frequencies.
  */
-class FrequencyArray extends AbstractFieldArray
+class Frequencies extends AbstractFieldArray
 {
     /**
-     * Define the columns and the "Add Row" button.
-     *
-     * @return void
+     * Prepare rendering the new field by adding all the needed columns.
      */
-    protected function _prepareToRender()
+    protected function _prepareToRender(): void
     {
-        $this->addColumn('code', [
-            'label' => __('Code'),
-            'class' => 'required-entry admin__control-text',
-            'style' => 'width: 140px;',
-        ]);
+        $this->addColumn(
+            'code',
+            [
+                'label' => __('Code'),
+                'class' => 'required-entry',
+                'style' => 'width:150px;'
+            ]
+        );
 
-        $this->addColumn('label', [
-            'label' => __('Label'),
-            'class' => 'required-entry admin__control-text',
-            'style' => 'width: 220px;',
-        ]);
+        $this->addColumn(
+            'label',
+            [
+                'label' => __('Label'),
+                'class' => 'required-entry',
+                'style' => 'width:200px;'
+            ]
+        );
 
-        $this->addColumn('modifier', [
-            'label' => __('Date Modifier'),
-            'class' => 'required-entry admin__control-text',
-            'style' => 'width: 170px;',
-        ]);
+        $this->addColumn(
+            'modifier',
+            [
+                'label' => __('Modifier (e.g. +7 days)'),
+                'class' => 'required-entry',
+                'style' => 'width:150px;'
+            ]
+        );
 
         $this->_addAfter = false;
         $this->_addButtonLabel = __('Add Frequency');
     }
 
     /**
-     * Decode the stored config value into rows.
+     * Prepare existing row data object.
      *
-     * Handles (in order of priority):
-     *   1. Already an array (Magento may pass this in some flows)
-     *   2. JSON  — new format written by the ArraySerialized backend model
-     *   3. PHP-serialized array — fallback for older Magento serialization
-     *   4. Legacy plain-text "code:Label:+N unit" one per line
+     * This is required to ensure existing saved data is populated correctly.
      *
-     * @return array
+     * @param DataObject $row
      */
-    protected function _getValue()
+    protected function _prepareArrayRow(DataObject $row): void
     {
-        $raw = $this->getElement()->getValue();
-
-        if (is_array($raw)) {
-            return $raw;
-        }
-
-        if (!is_string($raw) || $raw === '') {
-            return [];
-        }
-
-        // 1. JSON
-        $decoded = json_decode($raw, true);
-        if (is_array($decoded)) {
-            return $decoded;
-        }
-
-        // 2. PHP serialized
-        if (preg_match('/^a:\d+:{/', $raw)) {
-            $unserialized = @unserialize($raw, ['allowed_classes' => false]);
-            if (is_array($unserialized)) {
-                return $unserialized;
-            }
-        }
-
-        // 3. Legacy textarea: "code:Label:+N unit" per line
-        if (strpos($raw, ':') !== false) {
-            $rows = [];
-            $lines = preg_split('/\r\n|\r|\n/', $raw) ?: [];
-            foreach ($lines as $line) {
-                $line = trim($line);
-                if ($line === '') {
-                    continue;
-                }
-                $parts = array_map('trim', explode(':', $line, 3));
-                if (count($parts) !== 3) {
-                    continue;
-                }
-                [$code, $label, $modifier] = $parts;
-                if ($code === '' || $modifier === '') {
-                    continue;
-                }
-                $rows[] = [
-                    'code' => $code,
-                    'label' => $label,
-                    'modifier' => $modifier,
-                ];
-            }
-            if (!empty($rows)) {
-                return $rows;
-            }
-        }
-
-        return [];
+        // No special preparation needed for simple text columns.
     }
 }
 </file>
@@ -946,7 +894,6 @@ use Codilar\CoffeeClub\Model\CategoryValidator;
 use Codilar\CoffeeClub\Model\Config\FrequencyProvider;
 use Codilar\CoffeeClub\Model\ProductTypeValidator;
 use Codilar\CoffeeClub\Model\Subscription\EmailNotifier;
-use Codilar\CoffeeClub\Model\Subscription\SubscriptionManagement;
 use Codilar\CoffeeClub\Model\SubscriptionFactory;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Customer\Api\AddressRepositoryInterface;
@@ -968,7 +915,6 @@ class Create implements HttpPostActionInterface
         protected ProductRepositoryInterface      $productRepository,
         protected SubscriptionRepositoryInterface $subscriptionRepository,
         protected SubscriptionFactory             $subscriptionFactory,
-        protected SubscriptionManagement          $subscriptionManagement,
         protected CategoryValidator               $categoryValidator,
         protected ProductTypeValidator            $productTypeValidator,
         protected AddressRepositoryInterface      $addressRepository,
@@ -1001,53 +947,23 @@ class Create implements HttpPostActionInterface
             return $redirect->setPath('coffeeclub/subscription/index');
         }
 
-        $parentProductId = (int)$this->request->getParam('parent_product_id');
-        $childProductId = (int)$this->request->getParam('child_product_id');
-        $simpleProductId = (int)$this->request->getParam('product_id');
+        // The observer "CaptureVariantProduct" has already resolved the real
+        // product ID and put it into "product_id".
+        $productId = (int)$this->request->getParam('product_id');
+        $parentProductId = (int)$this->request->getParam('parent_product_id') ?: null;
         $quantity = max(1, (int)$this->request->getParam('quantity', 1));
         $frequency = (string)$this->request->getParam('frequency');
 
         try {
-            if ($parentProductId > 0) {
-                // -------- Configurable product path --------
-
-                // Guard #1: a real variant must have been captured client-side.
-                if ($childProductId <= 0) {
-                    throw new LocalizedException(
-                        __('Please select a product variant before starting a subscription.')
-                    );
-                }
-
-                // Guard #2: the parent ID must never be submitted as a child.
-                // Magento initialises the hidden #product input with the parent
-                // ID, so if the customer never completed a selection this is
-                // exactly what ends up here.
-                if ($childProductId === $parentProductId) {
-                    throw new LocalizedException(
-                        __('Please select a product variant before starting a subscription.')
-                    );
-                }
-
-                $parentProduct = $this->productRepository->getById($parentProductId);
-                $product = $this->productRepository->getById($childProductId);
-
-                // Guard #3: the submitted child must actually belong to the parent.
-                if (!$this->isChildOfParent($parentProduct, $childProductId)) {
-                    throw new LocalizedException(
-                        __('Selected variant does not belong to this product.')
-                    );
-                }
-
-                $productId = $childProductId;
-            } else {
-                // -------- Simple product path --------
-                $productId = $simpleProductId;
-                $product = $this->productRepository->getById($productId);
-                $parentProductId = null;
+            if ($productId <= 0) {
+                throw new LocalizedException(
+                    __('Please select a product variant before starting a subscription.')
+                );
             }
 
-            $categoryIds = $product->getCategoryIds();
-            if (!$this->categoryValidator->isProductInAllowedCategory($categoryIds)) {
+            $product = $this->productRepository->getById($productId);
+
+            if (!$this->categoryValidator->isProductInAllowedCategory($product->getCategoryIds())) {
                 throw new LocalizedException(
                     __('Subscriptions are not available for this product category.')
                 );
@@ -1062,20 +978,15 @@ class Create implements HttpPostActionInterface
             }
 
             if (!$this->frequencyProvider->isValid($frequency)) {
-                throw new LocalizedException(
-                    __('Invalid delivery frequency.')
-                );
+                throw new LocalizedException(__('Invalid delivery frequency.'));
             }
 
             $customerId = (int)$this->customerSession->getCustomerId();
             $customer = $this->customerSession->getCustomer();
 
-            // Build the delivery address from the customer's default shipping address.
-            // Throws a friendly exception if the customer has none, or if it is incomplete.
             $addressData = $this->buildAddressFromCustomer($customer);
             $this->assertDeliveryAddressIsComplete($addressData);
 
-            /** @var SubscriptionInterface $subscription */
             $subscription = $this->subscriptionFactory->create();
             $subscription->setCustomerId($customerId);
             $subscription->setProductId($productId);
@@ -1088,7 +999,6 @@ class Create implements HttpPostActionInterface
             $subscription->setNextDueDate((new \DateTime())->format('Y-m-d'));
             $subscription->setConsecutiveFailureCount(0);
 
-            // Save, then notify. The repository returns the authoritative object.
             $saved = $this->subscriptionRepository->save($subscription);
             $this->emailNotifier->notifyStarted($saved);
 
@@ -1100,32 +1010,13 @@ class Create implements HttpPostActionInterface
             $this->messageManager->addErrorMessage($exception->getMessage());
             return $redirect->setPath(
                 'catalog/product/view',
-                ['id' => $parentProductId ?: $simpleProductId]
+                ['id' => $parentProductId ?: $productId]
             );
         }
     }
 
     /**
-     * @param \Magento\Catalog\Api\Data\ProductInterface $parent
-     * @param int $childId
-     * @return bool
-     */
-    private function isChildOfParent($parent, int $childId): bool
-    {
-        $children = $parent->getTypeInstance()->getUsedProducts($parent);
-        foreach ($children as $child) {
-            if ((int)$child->getId() === $childId) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * Build address data from the customer's default shipping address.
-     *
-     * If the customer has no default shipping address, a clear exception is thrown
-     * so the subscription is never created with an empty delivery address.
      *
      * @param \Magento\Customer\Model\Data\Customer $customer
      * @return array
@@ -1182,10 +1073,7 @@ class Create implements HttpPostActionInterface
     }
 
     /**
-     * Ensure every field that Magento needs for a quote is present.
-     *
-     * The fields validated here mirror exactly what QuoteManagement::submit()
-     * requires; without them the cron-created order fails.
+     * Ensure every field Magento needs for a quote is present.
      *
      * @param array $addressData
      * @throws LocalizedException
@@ -1194,25 +1082,20 @@ class Create implements HttpPostActionInterface
     {
         $missing = [];
 
-        $streetLine = '';
         $street = $addressData['street'] ?? [];
-        if (is_array($street)) {
-            $streetLine = trim((string)($street[0] ?? ''));
-        } else {
-            $streetLine = trim((string)$street);
-        }
+        $streetLine = is_array($street)
+            ? trim((string)($street[0] ?? ''))
+            : trim((string)$street);
+
         if ($streetLine === '') {
             $missing[] = __('Street Address');
         }
-
         if (trim((string)($addressData['city'] ?? '')) === '') {
             $missing[] = __('City');
         }
-
         if (trim((string)($addressData['postcode'] ?? '')) === '') {
             $missing[] = __('Postcode');
         }
-
         if (trim((string)($addressData['telephone'] ?? '')) === '') {
             $missing[] = __('Telephone');
         }
@@ -1722,18 +1605,11 @@ class ProcessSubscriptions
                     <validate>validate-number validate-greater-than-zero</validate>
                 </field>
 
-                <field id="frequencies" translate="label comment" type="text"
-                       sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="frequencies" translate="label" type="text" sortOrder="50"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Available Frequencies</label>
-                    <comment><![CDATA[
-                        Add one row per delivery frequency.<br/>
-                        <strong>Code</strong> - internal identifier stored on the subscription (e.g. weekly).<br/>
-                        <strong>Label</strong> - what the customer sees (e.g. Weekly).<br/>
-                        <strong>Date Modifier</strong> - a PHP strtotime-style relative modifier
-                        (e.g. +7 days, +14 days, +1 month, +3 months, +1 year).
-                    ]]></comment>
-                    <frontend_model>Codilar\CoffeeClub\Block\Adminhtml\System\Config\Form\Field\FrequencyArray</frontend_model>
-                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                    <frontend_model>Codilar\CoffeeClub\Block\Adminhtml\Form\Field\Frequencies</frontend_model>
+                    <backend_model>Codilar\CoffeeClub\Model\Config\Backend\Frequencies</backend_model>
                 </field>
 
                 <field id="shipping_method" translate="label comment" type="text"
@@ -1750,6 +1626,24 @@ class ProcessSubscriptions
             </group>
         </section>
     </system>
+</config>
+</file>
+
+<file path="etc/frontend/events.xml">
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+
+    <!--
+        Fires right before the "coffeeclub/subscription/create" controller
+        executes. Our observer resolves the real product ID (simple OR
+        configurable variant) and puts it into the request as "product_id".
+    -->
+    <event name="controller_action_predispatch_coffeeclub_subscription_create">
+        <observer name="codilar_coffeeclub_capture_variant_product"
+                  instance="Codilar\CoffeeClub\Observer\CaptureVariantProduct"/>
+    </event>
+
 </config>
 </file>
 
@@ -1776,13 +1670,13 @@ class ProcessSubscriptions
                 <allowed_categories></allowed_categories>
                 <allowed_product_types>simple,configurable</allowed_product_types>
                 <failure_threshold>3</failure_threshold>
-                <frequencies><![CDATA[[
-                    {"code":"weekly","label":"Weekly","modifier":"+7 days"},
-                    {"code":"fortnightly","label":"Fortnightly","modifier":"+14 days"},
-                    {"code":"monthly","label":"Monthly","modifier":"+1 month"},
-                    {"code":"quarterly","label":"Quarterly","modifier":"+3 months"},
-                    {"code":"yearly","label":"Yearly","modifier":"+1 year"}
-                ]]]></frequencies>
+
+                <frequencies>a:5:{i:0;a:3:{s:4:"code";s:6:"weekly";s:5:"label";s:6:"Weekly";s:8:"modifier";s:7:"+7
+                    days";}i:1;a:3:{s:4:"code";s:11:"fortnightly";s:5:"label";s:11:"Fortnightly";s:8:"modifier";s:8:"+14
+                    days";}i:2;a:3:{s:4:"code";s:7:"monthly";s:5:"label";s:7:"Monthly";s:8:"modifier";s:8:"+1
+                    month";}i:3;a:3:{s:4:"code";s:9:"quarterly";s:5:"label";s:9:"Quarterly";s:8:"modifier";s:9:"+3
+                    months";}i:4;a:3:{s:4:"code";s:6:"yearly";s:5:"label";s:6:"Yearly";s:8:"modifier";s:7:"+1 year";}}
+                </frequencies>
                 <shipping_method>flatrate_flatrate</shipping_method>
                 <payment_method>checkmo</payment_method>
             </general>
@@ -2036,6 +1930,26 @@ class ProcessSubscriptions
 </config>
 </file>
 
+<file path="Model/Config/Backend/Frequencies.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Model\Config\Backend;
+
+use Magento\Config\Model\Config\Backend\Serialized\ArraySerialized;
+
+/**
+ * Backend model for the "frequencies" dynamic rows field.
+ *
+ * It extends ArraySerialized to automatically serialize the array of rows
+ * before saving to the database, and unserialize it when loading.
+ */
+class Frequencies extends ArraySerialized
+{
+    // No custom logic needed. The parent class handles serialization.
+}
+</file>
+
 <file path="Model/Config/Source/CategoryList.php">
 <?php
 declare(strict_types=1);
@@ -2045,25 +1959,18 @@ namespace Codilar\CoffeeClub\Model\Config\Source;
 use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory;
 use Magento\Framework\Data\OptionSourceInterface;
 use Magento\Store\Model\StoreManagerInterface;
-use Psr\Log\LoggerInterface;
 
 class CategoryList implements OptionSourceInterface
 {
     /**
      * Character used to indent child categories inside the dropdown.
-     * Using non-breaking spaces so they render correctly in HTML.
+     * Non-breaking spaces so they render correctly in HTML.
      */
     private const INDENT = "\u{00A0}\u{00A0}\u{00A0}";
 
-    /**
-     * @param CollectionFactory $categoryCollectionFactory
-     * @param StoreManagerInterface $storeManager
-     * @param LoggerInterface $logger
-     */
     public function __construct(
         protected CollectionFactory     $categoryCollectionFactory,
-        protected StoreManagerInterface $storeManager,
-        protected LoggerInterface       $logger
+        protected StoreManagerInterface $storeManager
     )
     {
     }
@@ -2078,12 +1985,6 @@ class CategoryList implements OptionSourceInterface
         $store = $this->storeManager->getDefaultStoreView();
         $storeId = (int)$store->getId();
         $rootCategoryId = (int)$store->getRootCategoryId();
-
-        $this->logger->info(sprintf(
-            'CoffeeClub DEBUG [CategoryList]: storeId=%d, rootCategoryId=%d',
-            $storeId,
-            $rootCategoryId
-        ));
 
         // Load all ACTIVE categories that live under the store's root category.
         $collection = $this->categoryCollectionFactory->create();
@@ -2104,11 +2005,6 @@ class CategoryList implements OptionSourceInterface
             $categoriesById[$id] = $category;
             $childrenByParent[$parentId][] = $id;
         }
-
-        $this->logger->info(sprintf(
-            'CoffeeClub DEBUG [CategoryList]: loaded %d categories.',
-            count($categoriesById)
-        ));
 
         $options = [];
         $this->buildOptions(
@@ -2230,9 +2126,6 @@ class FrequencyProvider
 {
     public const CONFIG_PATH = 'coffeeclub/general/frequencies';
 
-    /**
-     * @var array<string, array{label: string, modifier: string}>|null
-     */
     private ?array $cache = null;
 
     public function __construct(
@@ -2243,7 +2136,7 @@ class FrequencyProvider
     }
 
     /**
-     * Return all configured frequencies keyed by code.
+     * Get all configured frequencies as an associative array.
      *
      * @return array<string, array{label: string, modifier: string}>
      */
@@ -2253,34 +2146,43 @@ class FrequencyProvider
             return $this->cache;
         }
 
-        $raw = $this->scopeConfig->getValue(
+        $rawValue = $this->scopeConfig->getValue(
             self::CONFIG_PATH,
             ScopeInterface::SCOPE_STORE
         );
-        $rows = $this->decodeRows($raw);
+
+        if (!is_string($rawValue) || $rawValue === '') {
+            return $this->cache = [];
+        }
+
+        $data = @unserialize($rawValue);
+
+        // Fallback: newer Magento versions may save as JSON.
+        if (!is_array($data)) {
+            $data = json_decode($rawValue, true);
+        }
+
+        if (!is_array($data)) {
+            $this->logger->warning(
+                'CoffeeClub: Could not decode frequency configuration.'
+            );
+            return $this->cache = [];
+        }
 
         $map = [];
-
-        foreach ($rows as $row) {
-            if (!is_array($row)) {
+        foreach ($data as $row) {
+            if (!isset($row['code'], $row['label'], $row['modifier'])) {
                 continue;
             }
 
-            $code = trim((string)($row['code'] ?? ''));
-            $label = trim((string)($row['label'] ?? ''));
-            $modifier = trim((string)($row['modifier'] ?? ''));
-
-            if ($code === '' || $modifier === '') {
-                $this->logger->warning(sprintf(
-                    'CoffeeClub: skipping frequency row with empty code/modifier: %s',
-                    json_encode($row)
-                ));
+            $code = trim((string)$row['code']);
+            if ($code === '') {
                 continue;
             }
 
             $map[$code] = [
-                'label' => $label !== '' ? $label : $code,
-                'modifier' => $modifier,
+                'label' => trim((string)$row['label']) ?: $code,
+                'modifier' => trim((string)$row['modifier']),
             ];
         }
 
@@ -2288,25 +2190,38 @@ class FrequencyProvider
     }
 
     /**
-     * @return string[]
+     * @return array
      */
     public function getCodes(): array
     {
         return array_keys($this->getAll());
     }
 
+    /**
+     * @param string $code
+     * @return bool
+     */
     public function isValid(string $code): bool
     {
         return isset($this->getAll()[$code]);
     }
 
+    /**
+     * @param string $code
+     * @return string
+     */
     public function getLabel(string $code): string
     {
         return $this->getAll()[$code]['label'] ?? $code;
     }
 
     /**
-     * @throws \DateMalformedStringException
+     * Calculate the next due date using the configured modifier.
+     *
+     * @param string $code
+     * @param string|null $fromDate
+     * @return string
+     * @throws \InvalidArgumentException
      */
     public function calculateNextDate(string $code, ?string $fromDate = null): string
     {
@@ -2336,73 +2251,6 @@ class FrequencyProvider
         }
 
         return $base->format('Y-m-d');
-    }
-
-    /**
-     * Decode the raw config value into an array of rows.
-     *
-     * Handles:
-     *   1. Array (already decoded)
-     *   2. JSON  — new format written by ArraySerialized backend model
-     *   3. PHP-serialized array — fallback
-     *   4. Legacy plain-text "code:Label:+N unit" (one per line)
-     *
-     * @param mixed $raw
-     * @return array<int, array<string, string>>
-     */
-    private function decodeRows($raw): array
-    {
-        if (is_array($raw)) {
-            return $raw;
-        }
-
-        if (!is_string($raw) || $raw === '') {
-            return [];
-        }
-
-        // 1. JSON
-        $decoded = json_decode($raw, true);
-        if (is_array($decoded)) {
-            return $decoded;
-        }
-
-        // 2. PHP serialized
-        if (preg_match('/^a:\d+:{/', $raw)) {
-            $unserialized = @unserialize($raw, ['allowed_classes' => false]);
-            if (is_array($unserialized)) {
-                return $unserialized;
-            }
-        }
-
-        // 3. Legacy text format
-        if (strpos($raw, ':') !== false) {
-            $rows = [];
-            $lines = preg_split('/\r\n|\r|\n/', $raw) ?: [];
-            foreach ($lines as $line) {
-                $line = trim($line);
-                if ($line === '') {
-                    continue;
-                }
-                $parts = array_map('trim', explode(':', $line, 3));
-                if (count($parts) !== 3) {
-                    continue;
-                }
-                [$code, $label, $modifier] = $parts;
-                if ($code === '' || $modifier === '') {
-                    continue;
-                }
-                $rows[] = [
-                    'code' => $code,
-                    'label' => $label,
-                    'modifier' => $modifier,
-                ];
-            }
-            if (!empty($rows)) {
-                return $rows;
-            }
-        }
-
-        return [];
     }
 }
 </file>
@@ -2769,16 +2617,12 @@ use Throwable;
 
 /**
  * Cron-driven engine that fulfils due subscriptions by creating Magento orders.
- *
- * Emails are delegated to EmailNotifier — this class no longer builds any
- * messages directly. This is the single place where "what happened during a run"
- * is decided; EmailNotifier only cares about "how to send".
  */
 class Fulfilment
 {
     private const CONFIG_PATH_FAILURE_THRESHOLD = 'coffeeclub/general/failure_threshold';
-    private const CONFIG_PATH_SHIPPING_METHOD   = 'coffeeclub/general/shipping_method';
-    private const CONFIG_PATH_PAYMENT_METHOD    = 'coffeeclub/general/payment_method';
+    private const CONFIG_PATH_SHIPPING_METHOD = 'coffeeclub/general/shipping_method';
+    private const CONFIG_PATH_PAYMENT_METHOD = 'coffeeclub/general/payment_method';
 
     public function __construct(
         protected CollectionFactory               $collectionFactory,
@@ -2798,83 +2642,62 @@ class Fulfilment
         protected StoreManagerInterface           $storeManager,
         protected FrequencyProvider               $frequencyProvider,
         protected EmailNotifier                   $emailNotifier
-    ) {
+    )
+    {
     }
 
     public function processDueSubscriptions(): int
     {
-        $this->logger->info('CoffeeClub DEBUG: RUN START');
-
         if (!$this->scopeConfig->isSetFlag(
             'coffeeclub/general/enabled',
             ScopeInterface::SCOPE_STORE
         )) {
-            $this->logger->info('CoffeeClub DEBUG: Module disabled in configuration.');
             return 0;
         }
 
         $today = $this->dateTime->gmtDate('Y-m-d');
-        $this->logger->info('CoffeeClub DEBUG: Today (GMT) = ' . $today);
 
         $collection = $this->collectionFactory->create();
         $collection->addFieldToFilter('status', SubscriptionInterface::STATUS_ACTIVE)
             ->addFieldToFilter('next_due_date', ['lteq' => $today]);
 
-        $this->logger->info(
-            'CoffeeClub DEBUG: Found ' . $collection->getSize() . ' due subscription(s).'
-        );
-
         $processed = 0;
 
         foreach ($collection as $subscription) {
             try {
-                $this->logger->info(sprintf(
-                    'CoffeeClub DEBUG: --- Processing subscription #%d ---',
-                    (int) $subscription->getSubscriptionId()
-                ));
                 $this->processSingleSubscription($subscription);
                 $processed++;
             } catch (Throwable $exception) {
                 $this->logger->error(sprintf(
-                    'CoffeeClub DEBUG: FATAL for subscription #%d | %s | %s | %s:%d',
-                    (int) $subscription->getSubscriptionId(),
-                    get_class($exception),
-                    $exception->getMessage(),
-                    $exception->getFile(),
-                    $exception->getLine()
+                    'CoffeeClub: subscription #%d failed — %s',
+                    (int)$subscription->getSubscriptionId(),
+                    $exception->getMessage()
                 ));
             }
         }
-
-        $this->logger->info(sprintf(
-            'CoffeeClub DEBUG: ========== RUN END. Processed %d ==========',
-            $processed
-        ));
 
         return $processed;
     }
 
     private function processSingleSubscription(SubscriptionInterface $subscription): void
     {
-        $productId  = $subscription->getProductId();
+        $productId = $subscription->getProductId();
         $customerId = $subscription->getCustomerId();
 
         try {
             $product = $this->productRepository->getById($productId);
         } catch (Throwable $exception) {
-            $this->logger->error('CoffeeClub DEBUG: Product load failed: ' . $exception->getMessage());
-            $this->pauseAndNotify($subscription, sprintf('Product %d could not be loaded.', $productId));
+            $this->logger->error(
+                'CoffeeClub: product load failed — ' . $exception->getMessage()
+            );
+            $this->pauseAndNotify(
+                $subscription,
+                sprintf('Product %d could not be loaded.', $productId)
+            );
             return;
         }
 
-        $this->logger->info(sprintf(
-            'CoffeeClub DEBUG: Product loaded. SKU=%s | Type=%s | Salable=%s',
-            $product->getSku(),
-            $product->getTypeId(),
-            $product->isSalable() ? 'YES' : 'NO'
-        ));
-
-        if (!$product->isSalable() || (int) $product->getStatus() !== 1) {
+        if (!$product->isSalable() || (int)$product->getStatus() !== 1) {
             $this->pauseAndNotify($subscription, 'Product is no longer available.');
             return;
         }
@@ -2894,12 +2717,6 @@ class Fulfilment
         try {
             $order = $this->createOrder($subscription, $product, $customer);
 
-            $this->logger->info(sprintf(
-                'CoffeeClub DEBUG: createOrder() SUCCESS. Order ID=%d | Increment ID=%s',
-                (int) $order->getEntityId(),
-                $order->getIncrementId()
-            ));
-
             $subscription->setLastRunDate($this->dateTime->gmtDate('Y-m-d'));
             $subscription->setNextDueDate(
                 $this->calculateNextDueDateFromNow($subscription->getFrequency())
@@ -2910,19 +2727,12 @@ class Fulfilment
             $this->saveRunLog(
                 $saved,
                 RunLogInterface::OUTCOME_SUCCESS,
-                (int) $order->getEntityId(),
+                (int)$order->getEntityId(),
                 null
             );
 
-            // Notify the customer that their subscription order was created.
             $this->emailNotifier->notifyOrderSuccess($saved, $order);
         } catch (Throwable $exception) {
-            $this->logger->error(sprintf(
-                'CoffeeClub DEBUG: createOrder() FAILED | %s | %s',
-                get_class($exception),
-                $exception->getMessage()
-            ));
-
             $failureCount = $subscription->getConsecutiveFailureCount() + 1;
             $subscription->setConsecutiveFailureCount($failureCount);
 
@@ -2941,9 +2751,6 @@ class Fulfilment
                 $exception->getMessage()
             );
 
-            // Send exactly ONE email:
-            //  - If the failure threshold was reached, the dedicated "consecutive failures" email.
-            //  - Otherwise, the standard single-failure email.
             if ($thresholdReached) {
                 $this->emailNotifier->notifyConsecutiveFailures(
                     $saved,
@@ -2960,12 +2767,13 @@ class Fulfilment
         SubscriptionInterface                        $subscription,
         ProductInterface                             $product,
         \Magento\Customer\Api\Data\CustomerInterface $customer
-    ): OrderInterface {
-        $store = $this->storeManager->getStore((int) $customer->getStoreId());
+    ): OrderInterface
+    {
+        $store = $this->storeManager->getStore((int)$customer->getStoreId());
 
         $quote = $this->quoteFactory->create();
         $quote->setStore($store);
-        $quote->setStoreId((int) $store->getId());
+        $quote->setStoreId((int)$store->getId());
         $quote->setCustomer($customer);
         $quote->setCustomerIsGuest(false);
         $quote->setCustomerEmail($customer->getEmail());
@@ -2980,26 +2788,19 @@ class Fulfilment
         $quoteItem->getProduct()->setIsSuperMode(true);
 
         $addressData = $this->unserializeAddress($subscription->getDeliveryAddress());
-        $addressData = $this->resolveRegion($addressData, (int) $subscription->getCustomerId());
+        $addressData = $this->resolveRegion($addressData, (int)$subscription->getCustomerId());
 
         $quote->getBillingAddress()->addData($addressData);
         $quote->getShippingAddress()->addData($addressData);
 
         $quote->getShippingAddress()->setCollectShippingRates(true);
         $quote->getShippingAddress()->collectShippingRates();
-
-        $rates = $quote->getShippingAddress()->getAllShippingRates();
-        $this->logger->info(sprintf(
-            'CoffeeClub DEBUG: Available shipping rates: %d',
-            count($rates)
-        ));
-
         $quote->getShippingAddress()->setShippingMethod($this->getShippingMethod());
 
         $payment = $quote->getPayment();
         $payment->setQuote($quote);
         $payment->setStore($store);
-        $payment->setStoreId((int) $store->getId());
+        $payment->setStoreId((int)$store->getId());
 
         $quote->setPaymentMethod($this->getPaymentMethod());
         $quote->setInventoryProcessed(false);
@@ -3035,17 +2836,12 @@ class Fulfilment
                 $region = $collection->getFirstItem();
 
                 if ($region && $region->getId()) {
-                    $addressData['region_id'] = (int) $region->getId();
-                    $this->logger->info(sprintf(
-                        'CoffeeClub DEBUG: [resolveRegion] Found region_id %d for "%s"',
-                        (int) $region->getId(),
-                        $regionName
-                    ));
+                    $addressData['region_id'] = (int)$region->getId();
                     return $addressData;
                 }
             } catch (Throwable $exception) {
                 $this->logger->warning(
-                    'CoffeeClub DEBUG: [resolveRegion] Name lookup failed: ' . $exception->getMessage()
+                    'CoffeeClub: region name lookup failed — ' . $exception->getMessage()
                 );
             }
         }
@@ -3055,53 +2851,41 @@ class Fulfilment
             $defaultShippingId = $customer->getDefaultShipping();
 
             if ($defaultShippingId) {
-                $defaultAddress = $this->addressRepository->getById((int) $defaultShippingId);
+                $defaultAddress = $this->addressRepository->getById((int)$defaultShippingId);
 
                 if ($defaultAddress->getCountryId() === $countryId
                     && $defaultAddress->getRegionId()
                 ) {
-                    $addressData['region_id'] = (int) $defaultAddress->getRegionId();
+                    $addressData['region_id'] = (int)$defaultAddress->getRegionId();
 
                     $region = $defaultAddress->getRegion();
                     if ($region instanceof RegionInterface) {
-                        $addressData['region'] = (string) $region->getRegion();
+                        $addressData['region'] = (string)$region->getRegion();
                     } elseif (is_string($region)) {
                         $addressData['region'] = $region;
                     }
-
-                    $this->logger->info(sprintf(
-                        'CoffeeClub DEBUG: [resolveRegion] Copied region_id %d from customer default',
-                        (int) $defaultAddress->getRegionId()
-                    ));
                     return $addressData;
                 }
             }
         } catch (Throwable $exception) {
             $this->logger->warning(
-                'CoffeeClub DEBUG: [resolveRegion] Default address lookup failed: '
-                . $exception->getMessage()
+                'CoffeeClub: default address lookup failed — ' . $exception->getMessage()
             );
         }
 
         $this->logger->warning(
-            'CoffeeClub DEBUG: [resolveRegion] Could not resolve region_id for country ' . $countryId
+            'CoffeeClub: could not resolve region_id for country ' . $countryId
         );
 
         return $addressData;
     }
 
-    /**
-     * Pause the subscription due to a system reason (product gone/disabled)
-     * and notify the customer.
-     */
     private function pauseAndNotify(SubscriptionInterface $subscription, string $reason): void
     {
         $subscription->setStatus(SubscriptionInterface::STATUS_PAUSED);
         $saved = $this->subscriptionRepository->save($subscription);
 
         $this->saveRunLog($saved, RunLogInterface::OUTCOME_FAILURE, null, $reason);
-
-        // Uses the paused template, with the specific system reason.
         $this->emailNotifier->notifyPaused($saved, $reason);
     }
 
@@ -3110,10 +2894,11 @@ class Fulfilment
         string                $outcome,
         ?int                  $orderId,
         ?string               $reason
-    ): void {
+    ): void
+    {
         try {
             $runLog = $this->runLogFactory->create();
-            $runLog->setSubscriptionId((int) $subscription->getSubscriptionId());
+            $runLog->setSubscriptionId((int)$subscription->getSubscriptionId());
             $runLog->setRunDate($this->dateTime->gmtDate('Y-m-d H:i:s'));
             $runLog->setOutcome($outcome);
             $runLog->setOrderId($orderId);
@@ -3121,17 +2906,13 @@ class Fulfilment
             $this->runLogRepository->save($runLog);
         } catch (Throwable $exception) {
             $this->logger->error(
-                'CoffeeClub DEBUG: Failed to save run log: ' . $exception->getMessage()
+                'CoffeeClub: failed to save run log — ' . $exception->getMessage()
             );
         }
     }
 
     /**
-     * Calculate the next due date using the admin-configured frequency modifier.
-     *
-     * @param string $frequency Frequency code (e.g. "monthly", "weekly").
-     * @return string           Next date in Y-m-d format.
-     * @throws LocalizedException When the frequency is not configured.
+     * @throws LocalizedException
      */
     private function calculateNextDueDateFromNow(string $frequency): string
     {
@@ -3159,9 +2940,6 @@ class Fulfilment
         return $data;
     }
 
-    /**
-     * @return int
-     */
     private function getFailureThreshold(): int
     {
         $value = $this->scopeConfig->getValue(
@@ -3169,12 +2947,9 @@ class Fulfilment
             ScopeInterface::SCOPE_STORE
         );
 
-        return max(1, (int) $value);
+        return max(1, (int)$value);
     }
 
-    /**
-     * @return string
-     */
     private function getShippingMethod(): string
     {
         $value = $this->scopeConfig->getValue(
@@ -3185,9 +2960,6 @@ class Fulfilment
         return $value ?: 'flatrate_flatrate';
     }
 
-    /**
-     * @return string
-     */
     private function getPaymentMethod(): string
     {
         $value = $this->scopeConfig->getValue(
@@ -3901,6 +3673,99 @@ class SubscriptionRepository implements SubscriptionRepositoryInterface
 }
 </file>
 
+<file path="Observer/CaptureVariantProduct.php">
+<?php
+declare(strict_types=1);
+
+namespace Codilar\CoffeeClub\Observer;
+
+use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Event\Observer;
+use Magento\Framework\Event\ObserverInterface;
+use Psr\Log\LoggerInterface;
+use Throwable;
+
+/**
+ * Runs just before the "create subscription" controller executes.
+ *
+ * Its only job is to figure out the REAL product ID the customer wants
+ * to subscribe to and write it into the request as "product_id".
+ *
+ *   - Simple product       → product_id is already correct, do nothing.
+ *   - Configurable product → the JS captured child_product_id; we validate
+ *                            it belongs to the parent, then set product_id.
+ */
+class CaptureVariantProduct implements ObserverInterface
+{
+    public function __construct(
+        protected RequestInterface           $request,
+        protected ProductRepositoryInterface $productRepository,
+        protected LoggerInterface            $logger
+    )
+    {
+    }
+
+    public function execute(Observer $observer): void
+    {
+        $parentProductId = (int)$this->request->getParam('parent_product_id');
+        $childProductId = (int)$this->request->getParam('child_product_id');
+        $simpleProductId = (int)$this->request->getParam('product_id');
+
+        // ---- Simple product path -------------------------------------------
+        // No parent was submitted, so product_id is already the correct ID.
+        if ($parentProductId === 0) {
+            $this->logger->info(sprintf(
+                'CoffeeClub observer: simple product #%d',
+                $simpleProductId
+            ));
+            return;
+        }
+
+        // ---- Configurable product path -------------------------------------
+        // The JS must have written a real variant ID into child_product_id.
+        if ($childProductId <= 0 || $childProductId === $parentProductId) {
+            $this->logger->warning(
+                'CoffeeClub observer: no variant captured for parent #' . $parentProductId
+            );
+            $this->request->setParam('product_id', 0);
+            return;
+        }
+
+        // Verify the captured child really belongs to the parent product.
+        try {
+            $parent = $this->productRepository->getById($parentProductId);
+
+            foreach ($parent->getTypeInstance()->getUsedProducts($parent) as $child) {
+                if ((int)$child->getId() === $childProductId) {
+                    $this->request->setParam('product_id', $childProductId);
+                    $this->logger->info(sprintf(
+                        'CoffeeClub observer: variant #%d belongs to parent #%d',
+                        $childProductId,
+                        $parentProductId
+                    ));
+                    return;
+                }
+            }
+
+            $this->logger->warning(sprintf(
+                'CoffeeClub observer: variant #%d does not belong to parent #%d',
+                $childProductId,
+                $parentProductId
+            ));
+        } catch (Throwable $exception) {
+            $this->logger->error(
+                'CoffeeClub observer: ' . $exception->getMessage()
+            );
+        }
+
+        // Anything unexpected — force product_id to 0 so the controller
+        // shows a friendly error instead of saving bad data.
+        $this->request->setParam('product_id', 0);
+    }
+}
+</file>
+
 <file path="view/frontend/email/subscription_cancelled.html">
 <!--@subject Your Coffee Club subscription has been cancelled @-->
 <!--@vars {
@@ -4505,10 +4370,10 @@ class SubscriptionRepository implements SubscriptionRepositoryInterface
 /**
  * @var \Codilar\CoffeeClub\Block\Product\SubscriptionOption $block
  */
-$isEdit         = $block->getData('edit_mode');
-$subscription   = $block->getData('subscription');
-$product        = $block->getProduct();
-$frequencies    = $block->getFrequencies();
+$isEdit = $block->getData('edit_mode');
+$subscription = $block->getData('subscription');
+$product = $block->getProduct();
+$frequencies = $block->getFrequencies();
 $isConfigurable = !$isEdit && $block->isConfigurable();
 ?>
 <?php if ($block->isEligible() || $isEdit): ?>
@@ -4523,7 +4388,7 @@ $isConfigurable = !$isEdit && $block->isConfigurable();
             <input type="hidden" name="form_key"
                    value="<?= $block->escapeHtmlAttr($block->getFormKey()) ?>"/>
             <input type="hidden" name="subscription_id"
-                   value="<?= (int) $subscription->getSubscriptionId() ?>"/>
+                   value="<?= (int)$subscription->getSubscriptionId() ?>"/>
             <?php else: ?>
             <h3><?= $block->escapeHtml(__('Subscribe & Save')) ?></h3>
             <form action="<?= $block->escapeUrl($block->getUrl('coffeeclub/subscription/create')) ?>"
@@ -4535,21 +4400,21 @@ $isConfigurable = !$isEdit && $block->isConfigurable();
 
                 <?php if ($isConfigurable): ?>
                     <input type="hidden" name="parent_product_id"
-                           value="<?= (int) $product->getId() ?>"/>
+                           value="<?= (int)$product->getId() ?>"/>
                     <input type="hidden" name="child_product_id" value=""/>
                 <?php else: ?>
                     <input type="hidden" name="product_id"
-                           value="<?= (int) $product->getId() ?>"/>
+                           value="<?= (int)$product->getId() ?>"/>
                 <?php endif; ?>
                 <?php endif; ?>
 
                 <?php if ($isConfigurable): ?>
                     <div class="message info coffeeclub-variant-hint">
-                        <span>
-                            <?= $block->escapeHtml(
-                                __('Please select your product options above to activate the subscription.')
-                            ) ?>
-                        </span>
+                <span>
+                    <?= $block->escapeHtml(
+                        __('Please select your product options above to activate the subscription.')
+                    ) ?>
+                </span>
                     </div>
                 <?php endif; ?>
 
@@ -4561,7 +4426,7 @@ $isConfigurable = !$isEdit && $block->isConfigurable();
                         <input type="number"
                                id="coffeeclub-quantity"
                                name="quantity"
-                               value="<?= $isEdit ? (int) $subscription->getQuantity() : 1 ?>"
+                               value="<?= $isEdit ? (int)$subscription->getQuantity() : 1 ?>"
                                min="1"
                                class="input-text required-entry validate-number"
                                data-validate="{required:true, 'validate-greater-than-zero':true}"/>
@@ -4623,30 +4488,17 @@ $isConfigurable = !$isEdit && $block->isConfigurable();
                     <button type="submit"
                             class="action primary"
                         <?= $isConfigurable ? 'disabled="disabled"' : '' ?>>
-                        <span><?= $block->escapeHtml(
-                                $isEdit ? __('Update Subscription') : __('Start Subscription')
-                            ) ?></span>
+                <span><?= $block->escapeHtml(
+                        $isEdit ? __('Update Subscription') : __('Start Subscription')
+                    ) ?></span>
                     </button>
                 </div>
             </form>
 
             <?php if ($isConfigurable): ?>
-                <?php
-                /**
-                 * Server-generated map: { "size:5|color:10" => 259, ... }
-                 *
-                 * Built from the SAME data Magento uses to render the swatches,
-                 * so it can never disagree with what's on the page.
-                 *
-                 * Our JS reads the currently selected swatch options, builds the
-                 * same key, and looks up the matching simple-product ID.
-                 */
-                ?>
                 <script>
-                    window.coffeeclubParentId = <?= (int) $product->getId() ?>;
+                    window.coffeeclubParentId = <?= (int)$product->getId() ?>;
                     window.coffeeclubChildMap = <?= /* @noEscape */ json_encode($block->getChildProductMap()) ?>;
-                    console.log('[CoffeeClub] server map loaded — children:',
-                        Object.keys(window.coffeeclubChildMap || {}).length);
                 </script>
             <?php endif; ?>
 
@@ -5008,23 +4860,20 @@ define([
         }
 
         var parentIn = form.querySelector('input[name="parent_product_id"]');
-        var childIn  = form.querySelector('input[name="child_product_id"]');
-        var btn      = form.querySelector('button[type="submit"]');
-        var hint     = form.querySelector('.coffeeclub-variant-hint');
+        var childIn = form.querySelector('input[name="child_product_id"]');
+        var btn = form.querySelector('button[type="submit"]');
+        var hint = form.querySelector('.coffeeclub-variant-hint');
 
+        // Only configurable products have these hidden inputs.
         if (!parentIn || !childIn || !btn) {
-            console.log('[CoffeeClub] form is not configurable — skipping');
             return;
         }
 
         var parentId = parseInt(parentIn.value, 10) || 0;
-        var map      = window.coffeeclubChildMap || {};
-
-        console.log('[CoffeeClub] init — parent =', parentId,
-            '| map size =', Object.keys(map).length);
+        var map = window.coffeeclubChildMap || {};
 
         /**
-         * Read the currently selected swatch options from the DOM.
+         * Read the currently selected swatch / dropdown options from the DOM.
          * Returns { "size": "5", "color": "10", ... }
          */
         function readSelectedOptions() {
@@ -5034,7 +4883,7 @@ define([
                 return result;
             }
 
-            // Swatch-style attributes (what Luma and most themes emit).
+            // Swatch-style attributes (Luma and most themes).
             productForm.querySelectorAll('.swatch-attribute').forEach(function (attrEl) {
                 var code = attrEl.getAttribute('attribute-code')
                     || attrEl.getAttribute('data-attribute-code');
@@ -5054,10 +4903,8 @@ define([
 
             // Dropdown-style attributes (fallback).
             productForm.querySelectorAll('select.super-attribute-select').forEach(function (sel) {
-                // name="super_attribute[143]" → attribute id 143
                 var m = (sel.getAttribute('name') || '').match(/super_attribute\[(\d+)\]/);
                 if (m && sel.value) {
-                    // We store dropdowns by attribute id prefixed so we can tell them apart.
                     result['__id_' + m[1]] = String(sel.value);
                 }
             });
@@ -5093,6 +4940,7 @@ define([
         }
 
         var last = null;
+
         function sync() {
             var id = resolveChildId();
             if (id === last) {
@@ -5103,27 +4951,35 @@ define([
             if (id > 0) {
                 childIn.value = id;
                 btn.disabled = false;
-                if (hint) { hint.style.display = 'none'; }
-                console.log('[CoffeeClub] ✅ variant captured:', id);
+                if (hint) {
+                    hint.style.display = 'none';
+                }
             } else {
                 childIn.value = '';
                 btn.disabled = true;
-                if (hint) { hint.style.display = ''; }
-                console.log('[CoffeeClub] ⏳ no complete variant yet');
+                if (hint) {
+                    hint.style.display = '';
+                }
             }
         }
 
         // Any click or change on the page re-evaluates the selection.
-        document.addEventListener('click',  function () { setTimeout(sync, 50); setTimeout(sync, 250); }, true);
-        document.addEventListener('change', function () { setTimeout(sync, 50); setTimeout(sync, 250); }, true);
+        document.addEventListener('click', function () {
+            setTimeout(sync, 50);
+            setTimeout(sync, 250);
+        }, true);
 
-        // Safety net.
+        document.addEventListener('change', function () {
+            setTimeout(sync, 50);
+            setTimeout(sync, 250);
+        }, true);
+
+        // Safety net in case the theme emits something unusual.
         setInterval(sync, 400);
 
         // Never submit without a valid child ID.
         form.addEventListener('submit', function (e) {
             var v = parseInt(childIn.value, 10) || 0;
-            console.log('[CoffeeClub] submit — child_product_id =', v);
             if (v <= 0) {
                 e.preventDefault();
                 alert('Please select a product variant before starting a subscription.');

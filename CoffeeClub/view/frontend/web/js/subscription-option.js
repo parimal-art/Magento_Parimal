@@ -11,23 +11,20 @@ define([
         }
 
         var parentIn = form.querySelector('input[name="parent_product_id"]');
-        var childIn  = form.querySelector('input[name="child_product_id"]');
-        var btn      = form.querySelector('button[type="submit"]');
-        var hint     = form.querySelector('.coffeeclub-variant-hint');
+        var childIn = form.querySelector('input[name="child_product_id"]');
+        var btn = form.querySelector('button[type="submit"]');
+        var hint = form.querySelector('.coffeeclub-variant-hint');
 
+        // Only configurable products have these hidden inputs.
         if (!parentIn || !childIn || !btn) {
-            console.log('[CoffeeClub] form is not configurable — skipping');
             return;
         }
 
         var parentId = parseInt(parentIn.value, 10) || 0;
-        var map      = window.coffeeclubChildMap || {};
-
-        console.log('[CoffeeClub] init — parent =', parentId,
-            '| map size =', Object.keys(map).length);
+        var map = window.coffeeclubChildMap || {};
 
         /**
-         * Read the currently selected swatch options from the DOM.
+         * Read the currently selected swatch / dropdown options from the DOM.
          * Returns { "size": "5", "color": "10", ... }
          */
         function readSelectedOptions() {
@@ -37,7 +34,7 @@ define([
                 return result;
             }
 
-            // Swatch-style attributes (what Luma and most themes emit).
+            // Swatch-style attributes (Luma and most themes).
             productForm.querySelectorAll('.swatch-attribute').forEach(function (attrEl) {
                 var code = attrEl.getAttribute('attribute-code')
                     || attrEl.getAttribute('data-attribute-code');
@@ -57,10 +54,8 @@ define([
 
             // Dropdown-style attributes (fallback).
             productForm.querySelectorAll('select.super-attribute-select').forEach(function (sel) {
-                // name="super_attribute[143]" → attribute id 143
                 var m = (sel.getAttribute('name') || '').match(/super_attribute\[(\d+)\]/);
                 if (m && sel.value) {
-                    // We store dropdowns by attribute id prefixed so we can tell them apart.
                     result['__id_' + m[1]] = String(sel.value);
                 }
             });
@@ -96,6 +91,7 @@ define([
         }
 
         var last = null;
+
         function sync() {
             var id = resolveChildId();
             if (id === last) {
@@ -106,27 +102,35 @@ define([
             if (id > 0) {
                 childIn.value = id;
                 btn.disabled = false;
-                if (hint) { hint.style.display = 'none'; }
-                console.log('[CoffeeClub] ✅ variant captured:', id);
+                if (hint) {
+                    hint.style.display = 'none';
+                }
             } else {
                 childIn.value = '';
                 btn.disabled = true;
-                if (hint) { hint.style.display = ''; }
-                console.log('[CoffeeClub] ⏳ no complete variant yet');
+                if (hint) {
+                    hint.style.display = '';
+                }
             }
         }
 
         // Any click or change on the page re-evaluates the selection.
-        document.addEventListener('click',  function () { setTimeout(sync, 50); setTimeout(sync, 250); }, true);
-        document.addEventListener('change', function () { setTimeout(sync, 50); setTimeout(sync, 250); }, true);
+        document.addEventListener('click', function () {
+            setTimeout(sync, 50);
+            setTimeout(sync, 250);
+        }, true);
 
-        // Safety net.
+        document.addEventListener('change', function () {
+            setTimeout(sync, 50);
+            setTimeout(sync, 250);
+        }, true);
+
+        // Safety net in case the theme emits something unusual.
         setInterval(sync, 400);
 
         // Never submit without a valid child ID.
         form.addEventListener('submit', function (e) {
             var v = parseInt(childIn.value, 10) || 0;
-            console.log('[CoffeeClub] submit — child_product_id =', v);
             if (v <= 0) {
                 e.preventDefault();
                 alert('Please select a product variant before starting a subscription.');

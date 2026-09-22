@@ -30,16 +30,12 @@ use Throwable;
 
 /**
  * Cron-driven engine that fulfils due subscriptions by creating Magento orders.
- *
- * Emails are delegated to EmailNotifier — this class no longer builds any
- * messages directly. This is the single place where "what happened during a run"
- * is decided; EmailNotifier only cares about "how to send".
  */
 class Fulfilment
 {
     private const CONFIG_PATH_FAILURE_THRESHOLD = 'coffeeclub/general/failure_threshold';
-    private const CONFIG_PATH_SHIPPING_METHOD   = 'coffeeclub/general/shipping_method';
-    private const CONFIG_PATH_PAYMENT_METHOD    = 'coffeeclub/general/payment_method';
+    private const CONFIG_PATH_SHIPPING_METHOD = 'coffeeclub/general/shipping_method';
+    private const CONFIG_PATH_PAYMENT_METHOD = 'coffeeclub/general/payment_method';
 
     public function __construct(
         protected CollectionFactory               $collectionFactory,
@@ -59,83 +55,62 @@ class Fulfilment
         protected StoreManagerInterface           $storeManager,
         protected FrequencyProvider               $frequencyProvider,
         protected EmailNotifier                   $emailNotifier
-    ) {
+    )
+    {
     }
 
     public function processDueSubscriptions(): int
     {
-        $this->logger->info('CoffeeClub DEBUG: RUN START');
-
         if (!$this->scopeConfig->isSetFlag(
             'coffeeclub/general/enabled',
             ScopeInterface::SCOPE_STORE
         )) {
-            $this->logger->info('CoffeeClub DEBUG: Module disabled in configuration.');
             return 0;
         }
 
         $today = $this->dateTime->gmtDate('Y-m-d');
-        $this->logger->info('CoffeeClub DEBUG: Today (GMT) = ' . $today);
 
         $collection = $this->collectionFactory->create();
         $collection->addFieldToFilter('status', SubscriptionInterface::STATUS_ACTIVE)
             ->addFieldToFilter('next_due_date', ['lteq' => $today]);
 
-        $this->logger->info(
-            'CoffeeClub DEBUG: Found ' . $collection->getSize() . ' due subscription(s).'
-        );
-
         $processed = 0;
 
         foreach ($collection as $subscription) {
             try {
-                $this->logger->info(sprintf(
-                    'CoffeeClub DEBUG: --- Processing subscription #%d ---',
-                    (int) $subscription->getSubscriptionId()
-                ));
                 $this->processSingleSubscription($subscription);
                 $processed++;
             } catch (Throwable $exception) {
                 $this->logger->error(sprintf(
-                    'CoffeeClub DEBUG: FATAL for subscription #%d | %s | %s | %s:%d',
-                    (int) $subscription->getSubscriptionId(),
-                    get_class($exception),
-                    $exception->getMessage(),
-                    $exception->getFile(),
-                    $exception->getLine()
+                    'CoffeeClub: subscription #%d failed — %s',
+                    (int)$subscription->getSubscriptionId(),
+                    $exception->getMessage()
                 ));
             }
         }
-
-        $this->logger->info(sprintf(
-            'CoffeeClub DEBUG: ========== RUN END. Processed %d ==========',
-            $processed
-        ));
 
         return $processed;
     }
 
     private function processSingleSubscription(SubscriptionInterface $subscription): void
     {
-        $productId  = $subscription->getProductId();
+        $productId = $subscription->getProductId();
         $customerId = $subscription->getCustomerId();
 
         try {
             $product = $this->productRepository->getById($productId);
         } catch (Throwable $exception) {
-            $this->logger->error('CoffeeClub DEBUG: Product load failed: ' . $exception->getMessage());
-            $this->pauseAndNotify($subscription, sprintf('Product %d could not be loaded.', $productId));
+            $this->logger->error(
+                'CoffeeClub: product load failed — ' . $exception->getMessage()
+            );
+            $this->pauseAndNotify(
+                $subscription,
+                sprintf('Product %d could not be loaded.', $productId)
+            );
             return;
         }
 
-        $this->logger->info(sprintf(
-            'CoffeeClub DEBUG: Product loaded. SKU=%s | Type=%s | Salable=%s',
-            $product->getSku(),
-            $product->getTypeId(),
-            $product->isSalable() ? 'YES' : 'NO'
-        ));
-
-        if (!$product->isSalable() || (int) $product->getStatus() !== 1) {
+        if (!$product->isSalable() || (int)$product->getStatus() !== 1) {
             $this->pauseAndNotify($subscription, 'Product is no longer available.');
             return;
         }
@@ -155,12 +130,6 @@ class Fulfilment
         try {
             $order = $this->createOrder($subscription, $product, $customer);
 
-            $this->logger->info(sprintf(
-                'CoffeeClub DEBUG: createOrder() SUCCESS. Order ID=%d | Increment ID=%s',
-                (int) $order->getEntityId(),
-                $order->getIncrementId()
-            ));
-
             $subscription->setLastRunDate($this->dateTime->gmtDate('Y-m-d'));
             $subscription->setNextDueDate(
                 $this->calculateNextDueDateFromNow($subscription->getFrequency())
@@ -171,19 +140,12 @@ class Fulfilment
             $this->saveRunLog(
                 $saved,
                 RunLogInterface::OUTCOME_SUCCESS,
-                (int) $order->getEntityId(),
+                (int)$order->getEntityId(),
                 null
             );
 
-            // Notify the customer that their subscription order was created.
             $this->emailNotifier->notifyOrderSuccess($saved, $order);
         } catch (Throwable $exception) {
-            $this->logger->error(sprintf(
-                'CoffeeClub DEBUG: createOrder() FAILED | %s | %s',
-                get_class($exception),
-                $exception->getMessage()
-            ));
-
             $failureCount = $subscription->getConsecutiveFailureCount() + 1;
             $subscription->setConsecutiveFailureCount($failureCount);
 
@@ -202,9 +164,6 @@ class Fulfilment
                 $exception->getMessage()
             );
 
-            // Send exactly ONE email:
-            //  - If the failure threshold was reached, the dedicated "consecutive failures" email.
-            //  - Otherwise, the standard single-failure email.
             if ($thresholdReached) {
                 $this->emailNotifier->notifyConsecutiveFailures(
                     $saved,
@@ -221,12 +180,13 @@ class Fulfilment
         SubscriptionInterface                        $subscription,
         ProductInterface                             $product,
         \Magento\Customer\Api\Data\CustomerInterface $customer
-    ): OrderInterface {
-        $store = $this->storeManager->getStore((int) $customer->getStoreId());
+    ): OrderInterface
+    {
+        $store = $this->storeManager->getStore((int)$customer->getStoreId());
 
         $quote = $this->quoteFactory->create();
         $quote->setStore($store);
-        $quote->setStoreId((int) $store->getId());
+        $quote->setStoreId((int)$store->getId());
         $quote->setCustomer($customer);
         $quote->setCustomerIsGuest(false);
         $quote->setCustomerEmail($customer->getEmail());
@@ -241,26 +201,19 @@ class Fulfilment
         $quoteItem->getProduct()->setIsSuperMode(true);
 
         $addressData = $this->unserializeAddress($subscription->getDeliveryAddress());
-        $addressData = $this->resolveRegion($addressData, (int) $subscription->getCustomerId());
+        $addressData = $this->resolveRegion($addressData, (int)$subscription->getCustomerId());
 
         $quote->getBillingAddress()->addData($addressData);
         $quote->getShippingAddress()->addData($addressData);
 
         $quote->getShippingAddress()->setCollectShippingRates(true);
         $quote->getShippingAddress()->collectShippingRates();
-
-        $rates = $quote->getShippingAddress()->getAllShippingRates();
-        $this->logger->info(sprintf(
-            'CoffeeClub DEBUG: Available shipping rates: %d',
-            count($rates)
-        ));
-
         $quote->getShippingAddress()->setShippingMethod($this->getShippingMethod());
 
         $payment = $quote->getPayment();
         $payment->setQuote($quote);
         $payment->setStore($store);
-        $payment->setStoreId((int) $store->getId());
+        $payment->setStoreId((int)$store->getId());
 
         $quote->setPaymentMethod($this->getPaymentMethod());
         $quote->setInventoryProcessed(false);
@@ -296,17 +249,12 @@ class Fulfilment
                 $region = $collection->getFirstItem();
 
                 if ($region && $region->getId()) {
-                    $addressData['region_id'] = (int) $region->getId();
-                    $this->logger->info(sprintf(
-                        'CoffeeClub DEBUG: [resolveRegion] Found region_id %d for "%s"',
-                        (int) $region->getId(),
-                        $regionName
-                    ));
+                    $addressData['region_id'] = (int)$region->getId();
                     return $addressData;
                 }
             } catch (Throwable $exception) {
                 $this->logger->warning(
-                    'CoffeeClub DEBUG: [resolveRegion] Name lookup failed: ' . $exception->getMessage()
+                    'CoffeeClub: region name lookup failed — ' . $exception->getMessage()
                 );
             }
         }
@@ -316,53 +264,41 @@ class Fulfilment
             $defaultShippingId = $customer->getDefaultShipping();
 
             if ($defaultShippingId) {
-                $defaultAddress = $this->addressRepository->getById((int) $defaultShippingId);
+                $defaultAddress = $this->addressRepository->getById((int)$defaultShippingId);
 
                 if ($defaultAddress->getCountryId() === $countryId
                     && $defaultAddress->getRegionId()
                 ) {
-                    $addressData['region_id'] = (int) $defaultAddress->getRegionId();
+                    $addressData['region_id'] = (int)$defaultAddress->getRegionId();
 
                     $region = $defaultAddress->getRegion();
                     if ($region instanceof RegionInterface) {
-                        $addressData['region'] = (string) $region->getRegion();
+                        $addressData['region'] = (string)$region->getRegion();
                     } elseif (is_string($region)) {
                         $addressData['region'] = $region;
                     }
-
-                    $this->logger->info(sprintf(
-                        'CoffeeClub DEBUG: [resolveRegion] Copied region_id %d from customer default',
-                        (int) $defaultAddress->getRegionId()
-                    ));
                     return $addressData;
                 }
             }
         } catch (Throwable $exception) {
             $this->logger->warning(
-                'CoffeeClub DEBUG: [resolveRegion] Default address lookup failed: '
-                . $exception->getMessage()
+                'CoffeeClub: default address lookup failed — ' . $exception->getMessage()
             );
         }
 
         $this->logger->warning(
-            'CoffeeClub DEBUG: [resolveRegion] Could not resolve region_id for country ' . $countryId
+            'CoffeeClub: could not resolve region_id for country ' . $countryId
         );
 
         return $addressData;
     }
 
-    /**
-     * Pause the subscription due to a system reason (product gone/disabled)
-     * and notify the customer.
-     */
     private function pauseAndNotify(SubscriptionInterface $subscription, string $reason): void
     {
         $subscription->setStatus(SubscriptionInterface::STATUS_PAUSED);
         $saved = $this->subscriptionRepository->save($subscription);
 
         $this->saveRunLog($saved, RunLogInterface::OUTCOME_FAILURE, null, $reason);
-
-        // Uses the paused template, with the specific system reason.
         $this->emailNotifier->notifyPaused($saved, $reason);
     }
 
@@ -371,10 +307,11 @@ class Fulfilment
         string                $outcome,
         ?int                  $orderId,
         ?string               $reason
-    ): void {
+    ): void
+    {
         try {
             $runLog = $this->runLogFactory->create();
-            $runLog->setSubscriptionId((int) $subscription->getSubscriptionId());
+            $runLog->setSubscriptionId((int)$subscription->getSubscriptionId());
             $runLog->setRunDate($this->dateTime->gmtDate('Y-m-d H:i:s'));
             $runLog->setOutcome($outcome);
             $runLog->setOrderId($orderId);
@@ -382,17 +319,13 @@ class Fulfilment
             $this->runLogRepository->save($runLog);
         } catch (Throwable $exception) {
             $this->logger->error(
-                'CoffeeClub DEBUG: Failed to save run log: ' . $exception->getMessage()
+                'CoffeeClub: failed to save run log — ' . $exception->getMessage()
             );
         }
     }
 
     /**
-     * Calculate the next due date using the admin-configured frequency modifier.
-     *
-     * @param string $frequency Frequency code (e.g. "monthly", "weekly").
-     * @return string           Next date in Y-m-d format.
-     * @throws LocalizedException When the frequency is not configured.
+     * @throws LocalizedException
      */
     private function calculateNextDueDateFromNow(string $frequency): string
     {
@@ -420,9 +353,6 @@ class Fulfilment
         return $data;
     }
 
-    /**
-     * @return int
-     */
     private function getFailureThreshold(): int
     {
         $value = $this->scopeConfig->getValue(
@@ -430,12 +360,9 @@ class Fulfilment
             ScopeInterface::SCOPE_STORE
         );
 
-        return max(1, (int) $value);
+        return max(1, (int)$value);
     }
 
-    /**
-     * @return string
-     */
     private function getShippingMethod(): string
     {
         $value = $this->scopeConfig->getValue(
@@ -446,9 +373,6 @@ class Fulfilment
         return $value ?: 'flatrate_flatrate';
     }
 
-    /**
-     * @return string
-     */
     private function getPaymentMethod(): string
     {
         $value = $this->scopeConfig->getValue(

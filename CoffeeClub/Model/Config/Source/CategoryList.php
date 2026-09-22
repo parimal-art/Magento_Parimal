@@ -6,25 +6,18 @@ namespace Codilar\CoffeeClub\Model\Config\Source;
 use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory;
 use Magento\Framework\Data\OptionSourceInterface;
 use Magento\Store\Model\StoreManagerInterface;
-use Psr\Log\LoggerInterface;
 
 class CategoryList implements OptionSourceInterface
 {
     /**
      * Character used to indent child categories inside the dropdown.
-     * Using non-breaking spaces so they render correctly in HTML.
+     * Non-breaking spaces so they render correctly in HTML.
      */
     private const INDENT = "\u{00A0}\u{00A0}\u{00A0}";
 
-    /**
-     * @param CollectionFactory $categoryCollectionFactory
-     * @param StoreManagerInterface $storeManager
-     * @param LoggerInterface $logger
-     */
     public function __construct(
         protected CollectionFactory     $categoryCollectionFactory,
-        protected StoreManagerInterface $storeManager,
-        protected LoggerInterface       $logger
+        protected StoreManagerInterface $storeManager
     )
     {
     }
@@ -39,12 +32,6 @@ class CategoryList implements OptionSourceInterface
         $store = $this->storeManager->getDefaultStoreView();
         $storeId = (int)$store->getId();
         $rootCategoryId = (int)$store->getRootCategoryId();
-
-        $this->logger->info(sprintf(
-            'CoffeeClub DEBUG [CategoryList]: storeId=%d, rootCategoryId=%d',
-            $storeId,
-            $rootCategoryId
-        ));
 
         // Load all ACTIVE categories that live under the store's root category.
         $collection = $this->categoryCollectionFactory->create();
@@ -65,11 +52,6 @@ class CategoryList implements OptionSourceInterface
             $categoriesById[$id] = $category;
             $childrenByParent[$parentId][] = $id;
         }
-
-        $this->logger->info(sprintf(
-            'CoffeeClub DEBUG [CategoryList]: loaded %d categories.',
-            count($categoriesById)
-        ));
 
         $options = [];
         $this->buildOptions(

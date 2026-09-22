@@ -11,7 +11,6 @@ interface RunLogInterface
     public const OUTCOME = 'outcome';
     public const ORDER_ID = 'order_id';
     public const FAILURE_REASON = 'failure_reason';
-
     public const OUTCOME_SUCCESS = 'success';
     public const OUTCOME_FAILURE = 'failure';
     public const OUTCOME_SKIPPED = 'skipped';

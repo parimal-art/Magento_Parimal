@@ -11,9 +11,6 @@ class FrequencyProvider
 {
     public const CONFIG_PATH = 'coffeeclub/general/frequencies';
 
-    /**
-     * @var array<string, array{label: string, modifier: string}>|null
-     */
     private ?array $cache = null;
 
     public function __construct(
@@ -24,7 +21,7 @@ class FrequencyProvider
     }
 
     /**
-     * Return all configured frequencies keyed by code.
+     * Get all configured frequencies as an associative array.
      *
      * @return array<string, array{label: string, modifier: string}>
      */
@@ -34,34 +31,43 @@ class FrequencyProvider
             return $this->cache;
         }
 
-        $raw = $this->scopeConfig->getValue(
+        $rawValue = $this->scopeConfig->getValue(
             self::CONFIG_PATH,
             ScopeInterface::SCOPE_STORE
         );
-        $rows = $this->decodeRows($raw);
+
+        if (!is_string($rawValue) || $rawValue === '') {
+            return $this->cache = [];
+        }
+
+        $data = @unserialize($rawValue);
+
+        // Fallback: newer Magento versions may save as JSON.
+        if (!is_array($data)) {
+            $data = json_decode($rawValue, true);
+        }
+
+        if (!is_array($data)) {
+            $this->logger->warning(
+                'CoffeeClub: Could not decode frequency configuration.'
+            );
+            return $this->cache = [];
+        }
 
         $map = [];
-
-        foreach ($rows as $row) {
-            if (!is_array($row)) {
+        foreach ($data as $row) {
+            if (!isset($row['code'], $row['label'], $row['modifier'])) {
                 continue;
             }
 
-            $code = trim((string)($row['code'] ?? ''));
-            $label = trim((string)($row['label'] ?? ''));
-            $modifier = trim((string)($row['modifier'] ?? ''));
-
-            if ($code === '' || $modifier === '') {
-                $this->logger->warning(sprintf(
-                    'CoffeeClub: skipping frequency row with empty code/modifier: %s',
-                    json_encode($row)
-                ));
+            $code = trim((string)$row['code']);
+            if ($code === '') {
                 continue;
             }
 
             $map[$code] = [
-                'label' => $label !== '' ? $label : $code,
-                'modifier' => $modifier,
+                'label' => trim((string)$row['label']) ?: $code,
+                'modifier' => trim((string)$row['modifier']),
             ];
         }
 
@@ -69,25 +75,38 @@ class FrequencyProvider
     }
 
     /**
-     * @return string[]
+     * @return array
      */
     public function getCodes(): array
     {
         return array_keys($this->getAll());
     }
 
+    /**
+     * @param string $code
+     * @return bool
+     */
     public function isValid(string $code): bool
     {
         return isset($this->getAll()[$code]);
     }
 
+    /**
+     * @param string $code
+     * @return string
+     */
     public function getLabel(string $code): string
     {
         return $this->getAll()[$code]['label'] ?? $code;
     }
 
     /**
-     * @throws \DateMalformedStringException
+     * Calculate the next due date using the configured modifier.
+     *
+     * @param string $code
+     * @param string|null $fromDate
+     * @return string
+     * @throws \InvalidArgumentException
      */
     public function calculateNextDate(string $code, ?string $fromDate = null): string
     {
@@ -117,72 +136,5 @@ class FrequencyProvider
         }
 
         return $base->format('Y-m-d');
-    }
-
-    /**
-     * Decode the raw config value into an array of rows.
-     *
-     * Handles:
-     *   1. Array (already decoded)
-     *   2. JSON  — new format written by ArraySerialized backend model
-     *   3. PHP-serialized array — fallback
-     *   4. Legacy plain-text "code:Label:+N unit" (one per line)
-     *
-     * @param mixed $raw
-     * @return array<int, array<string, string>>
-     */
-    private function decodeRows($raw): array
-    {
-        if (is_array($raw)) {
-            return $raw;
-        }
-
-        if (!is_string($raw) || $raw === '') {
-            return [];
-        }
-
-        // 1. JSON
-        $decoded = json_decode($raw, true);
-        if (is_array($decoded)) {
-            return $decoded;
-        }
-
-        // 2. PHP serialized
-        if (preg_match('/^a:\d+:{/', $raw)) {
-            $unserialized = @unserialize($raw, ['allowed_classes' => false]);
-            if (is_array($unserialized)) {
-                return $unserialized;
-            }
-        }
-
-        // 3. Legacy text format
-        if (strpos($raw, ':') !== false) {
-            $rows = [];
-            $lines = preg_split('/\r\n|\r|\n/', $raw) ?: [];
-            foreach ($lines as $line) {
-                $line = trim($line);
-                if ($line === '') {
-                    continue;
-                }
-                $parts = array_map('trim', explode(':', $line, 3));
-                if (count($parts) !== 3) {
-                    continue;
-                }
-                [$code, $label, $modifier] = $parts;
-                if ($code === '' || $modifier === '') {
-                    continue;
-                }
-                $rows[] = [
-                    'code' => $code,
-                    'label' => $label,
-                    'modifier' => $modifier,
-                ];
-            }
-            if (!empty($rows)) {
-                return $rows;
-            }
-        }
-
-        return [];
     }
 }

@@ -9,7 +9,6 @@ use Codilar\CoffeeClub\Model\CategoryValidator;
 use Codilar\CoffeeClub\Model\Config\FrequencyProvider;
 use Codilar\CoffeeClub\Model\ProductTypeValidator;
 use Codilar\CoffeeClub\Model\Subscription\EmailNotifier;
-use Codilar\CoffeeClub\Model\Subscription\SubscriptionManagement;
 use Codilar\CoffeeClub\Model\SubscriptionFactory;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Customer\Api\AddressRepositoryInterface;
@@ -31,7 +30,6 @@ class Create implements HttpPostActionInterface
         protected ProductRepositoryInterface      $productRepository,
         protected SubscriptionRepositoryInterface $subscriptionRepository,
         protected SubscriptionFactory             $subscriptionFactory,
-        protected SubscriptionManagement          $subscriptionManagement,
         protected CategoryValidator               $categoryValidator,
         protected ProductTypeValidator            $productTypeValidator,
         protected AddressRepositoryInterface      $addressRepository,
@@ -64,53 +62,23 @@ class Create implements HttpPostActionInterface
             return $redirect->setPath('coffeeclub/subscription/index');
         }
 
-        $parentProductId = (int)$this->request->getParam('parent_product_id');
-        $childProductId = (int)$this->request->getParam('child_product_id');
-        $simpleProductId = (int)$this->request->getParam('product_id');
+        // The observer "CaptureVariantProduct" has already resolved the real
+        // product ID and put it into "product_id".
+        $productId = (int)$this->request->getParam('product_id');
+        $parentProductId = (int)$this->request->getParam('parent_product_id') ?: null;
         $quantity = max(1, (int)$this->request->getParam('quantity', 1));
         $frequency = (string)$this->request->getParam('frequency');
 
         try {
-            if ($parentProductId > 0) {
-                // -------- Configurable product path --------
-
-                // Guard #1: a real variant must have been captured client-side.
-                if ($childProductId <= 0) {
-                    throw new LocalizedException(
-                        __('Please select a product variant before starting a subscription.')
-                    );
-                }
-
-                // Guard #2: the parent ID must never be submitted as a child.
-                // Magento initialises the hidden #product input with the parent
-                // ID, so if the customer never completed a selection this is
-                // exactly what ends up here.
-                if ($childProductId === $parentProductId) {
-                    throw new LocalizedException(
-                        __('Please select a product variant before starting a subscription.')
-                    );
-                }
-
-                $parentProduct = $this->productRepository->getById($parentProductId);
-                $product = $this->productRepository->getById($childProductId);
-
-                // Guard #3: the submitted child must actually belong to the parent.
-                if (!$this->isChildOfParent($parentProduct, $childProductId)) {
-                    throw new LocalizedException(
-                        __('Selected variant does not belong to this product.')
-                    );
-                }
-
-                $productId = $childProductId;
-            } else {
-                // -------- Simple product path --------
-                $productId = $simpleProductId;
-                $product = $this->productRepository->getById($productId);
-                $parentProductId = null;
+            if ($productId <= 0) {
+                throw new LocalizedException(
+                    __('Please select a product variant before starting a subscription.')
+                );
             }
 
-            $categoryIds = $product->getCategoryIds();
-            if (!$this->categoryValidator->isProductInAllowedCategory($categoryIds)) {
+            $product = $this->productRepository->getById($productId);
+
+            if (!$this->categoryValidator->isProductInAllowedCategory($product->getCategoryIds())) {
                 throw new LocalizedException(
                     __('Subscriptions are not available for this product category.')
                 );
@@ -125,20 +93,15 @@ class Create implements HttpPostActionInterface
             }
 
             if (!$this->frequencyProvider->isValid($frequency)) {
-                throw new LocalizedException(
-                    __('Invalid delivery frequency.')
-                );
+                throw new LocalizedException(__('Invalid delivery frequency.'));
             }
 
             $customerId = (int)$this->customerSession->getCustomerId();
             $customer = $this->customerSession->getCustomer();
 
-            // Build the delivery address from the customer's default shipping address.
-            // Throws a friendly exception if the customer has none, or if it is incomplete.
             $addressData = $this->buildAddressFromCustomer($customer);
             $this->assertDeliveryAddressIsComplete($addressData);
 
-            /** @var SubscriptionInterface $subscription */
             $subscription = $this->subscriptionFactory->create();
             $subscription->setCustomerId($customerId);
             $subscription->setProductId($productId);
@@ -151,7 +114,6 @@ class Create implements HttpPostActionInterface
             $subscription->setNextDueDate((new \DateTime())->format('Y-m-d'));
             $subscription->setConsecutiveFailureCount(0);
 
-            // Save, then notify. The repository returns the authoritative object.
             $saved = $this->subscriptionRepository->save($subscription);
             $this->emailNotifier->notifyStarted($saved);
 
@@ -163,32 +125,13 @@ class Create implements HttpPostActionInterface
             $this->messageManager->addErrorMessage($exception->getMessage());
             return $redirect->setPath(
                 'catalog/product/view',
-                ['id' => $parentProductId ?: $simpleProductId]
+                ['id' => $parentProductId ?: $productId]
             );
         }
     }
 
     /**
-     * @param \Magento\Catalog\Api\Data\ProductInterface $parent
-     * @param int $childId
-     * @return bool
-     */
-    private function isChildOfParent($parent, int $childId): bool
-    {
-        $children = $parent->getTypeInstance()->getUsedProducts($parent);
-        foreach ($children as $child) {
-            if ((int)$child->getId() === $childId) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * Build address data from the customer's default shipping address.
-     *
-     * If the customer has no default shipping address, a clear exception is thrown
-     * so the subscription is never created with an empty delivery address.
      *
      * @param \Magento\Customer\Model\Data\Customer $customer
      * @return array
@@ -245,10 +188,7 @@ class Create implements HttpPostActionInterface
     }
 
     /**
-     * Ensure every field that Magento needs for a quote is present.
-     *
-     * The fields validated here mirror exactly what QuoteManagement::submit()
-     * requires; without them the cron-created order fails.
+     * Ensure every field Magento needs for a quote is present.
      *
      * @param array $addressData
      * @throws LocalizedException
@@ -257,25 +197,20 @@ class Create implements HttpPostActionInterface
     {
         $missing = [];
 
-        $streetLine = '';
         $street = $addressData['street'] ?? [];
-        if (is_array($street)) {
-            $streetLine = trim((string)($street[0] ?? ''));
-        } else {
-            $streetLine = trim((string)$street);
-        }
+        $streetLine = is_array($street)
+            ? trim((string)($street[0] ?? ''))
+            : trim((string)$street);
+
         if ($streetLine === '') {
             $missing[] = __('Street Address');
         }
-
         if (trim((string)($addressData['city'] ?? '')) === '') {
             $missing[] = __('City');
         }
-
         if (trim((string)($addressData['postcode'] ?? '')) === '') {
             $missing[] = __('Postcode');
         }
-
         if (trim((string)($addressData['telephone'] ?? '')) === '') {
             $missing[] = __('Telephone');
         }

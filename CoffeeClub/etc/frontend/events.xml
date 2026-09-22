@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+
+    <!--
+        Fires right before the "coffeeclub/subscription/create" controller
+        executes. Our observer resolves the real product ID (simple OR
+        configurable variant) and puts it into the request as "product_id".
+    -->
+    <event name="controller_action_predispatch_coffeeclub_subscription_create">
+        <observer name="codilar_coffeeclub_capture_variant_product"
+                  instance="Codilar\CoffeeClub\Observer\CaptureVariantProduct"/>
+    </event>
+
+</config>

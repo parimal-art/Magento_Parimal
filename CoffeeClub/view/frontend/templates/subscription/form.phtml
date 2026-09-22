@@ -2,10 +2,10 @@
 /**
  * @var \Codilar\CoffeeClub\Block\Product\SubscriptionOption $block
  */
-$isEdit         = $block->getData('edit_mode');
-$subscription   = $block->getData('subscription');
-$product        = $block->getProduct();
-$frequencies    = $block->getFrequencies();
+$isEdit = $block->getData('edit_mode');
+$subscription = $block->getData('subscription');
+$product = $block->getProduct();
+$frequencies = $block->getFrequencies();
 $isConfigurable = !$isEdit && $block->isConfigurable();
 ?>
 <?php if ($block->isEligible() || $isEdit): ?>
@@ -20,7 +20,7 @@ $isConfigurable = !$isEdit && $block->isConfigurable();
             <input type="hidden" name="form_key"
                    value="<?= $block->escapeHtmlAttr($block->getFormKey()) ?>"/>
             <input type="hidden" name="subscription_id"
-                   value="<?= (int) $subscription->getSubscriptionId() ?>"/>
+                   value="<?= (int)$subscription->getSubscriptionId() ?>"/>
             <?php else: ?>
             <h3><?= $block->escapeHtml(__('Subscribe & Save')) ?></h3>
             <form action="<?= $block->escapeUrl($block->getUrl('coffeeclub/subscription/create')) ?>"
@@ -32,21 +32,21 @@ $isConfigurable = !$isEdit && $block->isConfigurable();
 
                 <?php if ($isConfigurable): ?>
                     <input type="hidden" name="parent_product_id"
-                           value="<?= (int) $product->getId() ?>"/>
+                           value="<?= (int)$product->getId() ?>"/>
                     <input type="hidden" name="child_product_id" value=""/>
                 <?php else: ?>
                     <input type="hidden" name="product_id"
-                           value="<?= (int) $product->getId() ?>"/>
+                           value="<?= (int)$product->getId() ?>"/>
                 <?php endif; ?>
                 <?php endif; ?>
 
                 <?php if ($isConfigurable): ?>
                     <div class="message info coffeeclub-variant-hint">
-                        <span>
-                            <?= $block->escapeHtml(
-                                __('Please select your product options above to activate the subscription.')
-                            ) ?>
-                        </span>
+                <span>
+                    <?= $block->escapeHtml(
+                        __('Please select your product options above to activate the subscription.')
+                    ) ?>
+                </span>
                     </div>
                 <?php endif; ?>
 
@@ -58,7 +58,7 @@ $isConfigurable = !$isEdit && $block->isConfigurable();
                         <input type="number"
                                id="coffeeclub-quantity"
                                name="quantity"
-                               value="<?= $isEdit ? (int) $subscription->getQuantity() : 1 ?>"
+                               value="<?= $isEdit ? (int)$subscription->getQuantity() : 1 ?>"
                                min="1"
                                class="input-text required-entry validate-number"
                                data-validate="{required:true, 'validate-greater-than-zero':true}"/>
@@ -120,30 +120,17 @@ $isConfigurable = !$isEdit && $block->isConfigurable();
                     <button type="submit"
                             class="action primary"
                         <?= $isConfigurable ? 'disabled="disabled"' : '' ?>>
-                        <span><?= $block->escapeHtml(
-                                $isEdit ? __('Update Subscription') : __('Start Subscription')
-                            ) ?></span>
+                <span><?= $block->escapeHtml(
+                        $isEdit ? __('Update Subscription') : __('Start Subscription')
+                    ) ?></span>
                     </button>
                 </div>
             </form>
 
             <?php if ($isConfigurable): ?>
-                <?php
-                /**
-                 * Server-generated map: { "size:5|color:10" => 259, ... }
-                 *
-                 * Built from the SAME data Magento uses to render the swatches,
-                 * so it can never disagree with what's on the page.
-                 *
-                 * Our JS reads the currently selected swatch options, builds the
-                 * same key, and looks up the matching simple-product ID.
-                 */
-                ?>
                 <script>
-                    window.coffeeclubParentId = <?= (int) $product->getId() ?>;
+                    window.coffeeclubParentId = <?= (int)$product->getId() ?>;
                     window.coffeeclubChildMap = <?= /* @noEscape */ json_encode($block->getChildProductMap()) ?>;
-                    console.log('[CoffeeClub] server map loaded — children:',
-                        Object.keys(window.coffeeclubChildMap || {}).length);
                 </script>
             <?php endif; ?>
 

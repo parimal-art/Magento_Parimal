@@ -8,13 +8,13 @@
                 <allowed_categories></allowed_categories>
                 <allowed_product_types>simple,configurable</allowed_product_types>
                 <failure_threshold>3</failure_threshold>
-                <frequencies><![CDATA[[
-                    {"code":"weekly","label":"Weekly","modifier":"+7 days"},
-                    {"code":"fortnightly","label":"Fortnightly","modifier":"+14 days"},
-                    {"code":"monthly","label":"Monthly","modifier":"+1 month"},
-                    {"code":"quarterly","label":"Quarterly","modifier":"+3 months"},
-                    {"code":"yearly","label":"Yearly","modifier":"+1 year"}
-                ]]]></frequencies>
+
+                <frequencies>a:5:{i:0;a:3:{s:4:"code";s:6:"weekly";s:5:"label";s:6:"Weekly";s:8:"modifier";s:7:"+7
+                    days";}i:1;a:3:{s:4:"code";s:11:"fortnightly";s:5:"label";s:11:"Fortnightly";s:8:"modifier";s:8:"+14
+                    days";}i:2;a:3:{s:4:"code";s:7:"monthly";s:5:"label";s:7:"Monthly";s:8:"modifier";s:8:"+1
+                    month";}i:3;a:3:{s:4:"code";s:9:"quarterly";s:5:"label";s:9:"Quarterly";s:8:"modifier";s:9:"+3
+                    months";}i:4;a:3:{s:4:"code";s:6:"yearly";s:5:"label";s:6:"Yearly";s:8:"modifier";s:7:"+1 year";}}
+                </frequencies>
                 <shipping_method>flatrate_flatrate</shipping_method>
                 <payment_method>checkmo</payment_method>
             </general>
