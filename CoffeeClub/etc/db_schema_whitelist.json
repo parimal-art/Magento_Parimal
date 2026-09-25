@@ -1,0 +1,49 @@
+{
+    "codilar_coffeeclub_subscription": {
+        "column": {
+            "subscription_id": true,
+            "customer_id": true,
+            "product_id": true,
+            "parent_product_id": true,
+            "quantity": true,
+            "agreed_price": true,
+            "frequency": true,
+            "delivery_address": true,
+            "status": true,
+            "next_due_date": true,
+            "last_run_date": true,
+            "consecutive_failure_count": true,
+            "created_at": true,
+            "updated_at": true
+        },
+        "index": {
+            "CODILAR_COFFEECLUB_SUBSCRIPTION_CUSTOMER_ID": true,
+            "CODILAR_COFFEECLUB_SUBSCRIPTION_STATUS_NEXT_DUE_DATE": true,
+            "CODILAR_COFFEECLUB_SUBSCRIPTION_PRODUCT_ID": true,
+            "CODILAR_COFFEECLUB_SUBSCRIPTION_PARENT_PRODUCT_ID": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "CODILAR_COFFEECLUB_SUBSCRIPTION_CSTR_ID_CSTR_ENTT_ENTT_ID": true,
+            "CODILAR_COFFEECLUB_SUBSCRIPTION_PRD_ID_CAT_PRD_ENTT_ENTT_ID": true
+        }
+    },
+    "codilar_coffeeclub_run_log": {
+        "column": {
+            "log_id": true,
+            "subscription_id": true,
+            "run_date": true,
+            "outcome": true,
+            "order_id": true,
+            "failure_reason": true
+        },
+        "index": {
+            "CODILAR_COFFEECLUB_RUN_LOG_SUBSCRIPTION_ID": true,
+            "CODILAR_COFFEECLUB_RUN_LOG_RUN_DATE": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "FK_D5083588253243D79FFD041674C63BAD": true
+        }
+    }
+}

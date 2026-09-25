@@ -30,4 +30,23 @@
         </arguments>
     </type>
 
+    <virtualType name="Codilar\CoffeeClub\Model\ResourceModel\Subscription\Grid\Collection"
+                 type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
+        <arguments>
+            <argument name="mainTable" xsi:type="string">codilar_coffeeclub_subscription</argument>
+            <argument name="resourceModel" xsi:type="string">Codilar\CoffeeClub\Model\ResourceModel\Subscription
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+        <arguments>
+            <argument name="collections" xsi:type="array">
+                <item name="codilar_subs_subs_listing_data_source" xsi:type="string">
+                    Codilar\CoffeeClub\Model\ResourceModel\Subscription\Grid\Collection
+                </item>
+            </argument>
+        </arguments>
+    </type>
+
 </config>
